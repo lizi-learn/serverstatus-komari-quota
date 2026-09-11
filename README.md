@@ -2,7 +2,7 @@
 
 面向 Komari 的 ServerStatus 风格主题。界面按照经典 Nezha ServerStatus 的紧凑表格、分组卡片、状态点、渐变用量条和响应式导航重新实现，数据层使用 Komari 原生 RPC2。
 
-此仓库是为 `small.bismih520.com` 定制的流量额度版本，基于 [tfhmc/serverstatus](https://github.com/tfhmc/serverstatus)。它保留原主题外观，并为每台节点增加剩余流量额度进度条；额度为 `0 B` 的节点显示为不限流量。账户状态加载时预留固定空间，避免登录用户刷新页面时短暂出现设置齿轮。
+此仓库是为 `small.bismih520.com` 定制的流量额度版本，基于 [tfhmc/serverstatus](https://github.com/tfhmc/serverstatus)。它保留原主题外观，并为每台节点增加剩余流量额度进度条；额度为 `0 B` 的节点显示带 `∞` 的满格绿色进度条。账户状态加载时预留固定空间，避免登录用户刷新页面时短暂出现设置齿轮。
 
 ## 功能
 
@@ -16,7 +16,7 @@
 
 ## 安装
 
-在 Komari 后台的主题管理页面上传仓库根目录的 `ServerStatusQuota2-v1.0.18-quota.2.zip`，随后应用主题。ZIP 根目录包含：
+在 Komari 后台的主题管理页面上传仓库根目录的 `ServerStatusQuota3-v1.0.18-quota.3.zip`，随后应用主题。ZIP 根目录包含：
 
 ```text
 komari-theme.json

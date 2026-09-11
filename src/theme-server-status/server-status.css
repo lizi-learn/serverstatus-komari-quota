@@ -331,17 +331,6 @@
   width: 100%;
 }
 
-.ss-quota-unlimited {
-  display: inline-flex;
-  min-height: 20px;
-  align-items: center;
-  justify-content: center;
-  color: var(--ss-muted);
-  font-size: 16px;
-  font-weight: 600;
-  line-height: 20px;
-}
-
 .ss-status-dot {
   width: 12px;
   height: 12px;

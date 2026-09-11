@@ -96,10 +96,12 @@ function ProgressBar({
   value,
   online,
   toneValue = value,
+  label,
 }: {
   value: number;
   online: boolean;
   toneValue?: number;
+  label?: ReactNode;
 }) {
   const safeValue = Math.min(100, Math.max(0, Number(value) || 0));
   const safeToneValue = Math.min(100, Math.max(0, Number(toneValue) || 0));
@@ -116,7 +118,7 @@ function ProgressBar({
         style={{ transform: `scaleX(${safeValue / 100})` }}
         aria-hidden="true"
       />
-      <small className="ss-progress-label">{formatPercent(safeValue)}%</small>
+      <small className="ss-progress-label">{label ?? `${formatPercent(safeValue)}%`}</small>
     </div>
   );
 }
@@ -154,8 +156,8 @@ function TrafficQuota({
   const limit = Number(node.traffic_limit) || 0;
   if (limit <= 0) {
     return (
-      <span className="ss-quota-unlimited" title={chinese ? "不限流量" : "Unlimited traffic"}>
-        ∞
+      <span className="ss-quota-progress" title={chinese ? "不限流量" : "Unlimited traffic"}>
+        <ProgressBar value={100} toneValue={0} online={online} label="∞" />
       </span>
     );
   }

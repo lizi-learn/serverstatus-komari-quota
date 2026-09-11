@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <script>
+      (() => {
+        const retryKey = "serverstatus:asset-recovery-at";
+        const retryWindow = 60000;
+        const cacheNames = new Set([
+          "komari-scripts",
+          "komari-styles",
+          "serverstatus-flags",
+        ]);
+
+        const isLegacyCache = (name) =>
+          cacheNames.has(name) || name.startsWith("workbox-precache");
+
+        const isLegacyWorker = (worker) => {
+          if (!worker) return false;
+          try {
+            const url = new URL(worker.scriptURL);
+            return url.origin === location.origin && url.pathname.endsWith("/sw.js");
+          } catch {
+            return false;
+          }
+        };
+
+        const cleanup = async () => {
+          const tasks = [];
+
+          if ("serviceWorker" in navigator) {
+            tasks.push(
+              navigator.serviceWorker.getRegistrations().then((registrations) =>
+                Promise.all(
+                  registrations
+                    .filter((registration) =>
+                      [
+                        registration.active,
+                        registration.waiting,
+                        registration.installing,
+                      ].some(isLegacyWorker),
+                    )
+                    .map((registration) => registration.unregister()),
+                ),
+              ),
+            );
+          }
+
+          if ("caches" in window) {
+            tasks.push(
+              caches.keys().then((names) =>
+                Promise.all(
+                  names.filter(isLegacyCache).map((name) => caches.delete(name)),
+                ),
+              ),
+            );
+          }
+
+          await Promise.allSettled(tasks);
+        };
+
+        const getLastRetry = () => {
+          try {
+            return Number(sessionStorage.getItem(retryKey) || 0);
+          } catch {
+            return 0;
+          }
+        };
+
+        const markRetry = (time) => {
+          try {
+            sessionStorage.setItem(retryKey, String(time));
+          } catch {
+            return;
+          }
+        };
+
+        const recover = (force = false) => {
+          const now = Date.now();
+          if (!force && now - getLastRetry() < retryWindow) return false;
+
+          markRetry(now);
+          const timeout = new Promise((resolve) => setTimeout(resolve, 1200));
+          void Promise.race([cleanup(), timeout]).finally(() => {
+            const url = new URL(location.href);
+            url.searchParams.set("__ss_reload", String(now));
+            location.replace(url.href);
+          });
+          return true;
+        };
+
+        const messageOf = (reason) => {
+          if (typeof reason === "string") return reason;
+          if (reason && typeof reason.message === "string") return reason.message;
+          return String(reason || "");
+        };
+
+        const isAssetLoadError = (reason) =>
+          /dynamically imported module|importing a module script failed|failed to load module script|error loading dynamically imported module|chunkloaderror|unable to preload css/i.test(
+            messageOf(reason),
+          );
+
+        Object.defineProperty(window, "__serverStatusRecoverAssets", {
+          configurable: true,
+          value: recover,
+        });
+
+        window.addEventListener("vite:preloadError", (event) => {
+          if (recover()) event.preventDefault();
+        });
+
+        window.addEventListener("unhandledrejection", (event) => {
+          if (isAssetLoadError(event.reason) && recover()) event.preventDefault();
+        });
+
+        window.addEventListener(
+          "error",
+          (event) => {
+            const targetUrl = event.target?.src || event.target?.href || "";
+            let isLocalAsset = false;
+            try {
+              const url = new URL(targetUrl, location.href);
+              isLocalAsset =
+                url.origin === location.origin && /\.(?:js|css)$/.test(url.pathname);
+            } catch {
+              isLocalAsset = false;
+            }
+
+            if ((isLocalAsset || isAssetLoadError(event.error || event.message)) && recover()) {
+              event.preventDefault();
+            }
+          },
+          true,
+        );
+      })();
+    </script>
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+    <meta name="description" content="A simple server monitor tool." />
+    <meta
+      name="keywords"
+      content="server monitor, Komari Monitor, server uptime monitoring, real-time server status, server performance dashboard, monitoring tool"
+    />
+    <meta name="author" content="Akizon77" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (() => {
+        const parseAppearance = (value) => {
+          if (!value) return "system";
+          try {
+            const parsed = JSON.parse(value);
+            return typeof parsed === "string" ? parsed : value;
+          } catch {
+            return value;
+          }
+        };
+
+        try {
+          const appearance = parseAppearance(localStorage.getItem("appearance"));
+          const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)").matches;
+          const isDark = appearance === "dark" || (appearance !== "light" && prefersDark);
+          document.documentElement.classList.toggle("dark", isDark);
+        } catch {
+          document.documentElement.classList.remove("dark");
+        }
+      })();
+    </script>
+    <style>
+      :where(html) {
+        background: #ffffff;
+        color-scheme: light;
+      }
+
+      :where(html.dark) {
+        background: #111111;
+        color-scheme: dark;
+      }
+
+      html,
+      body,
+      #root {
+        min-height: 100%;
+      }
+
+      body {
+        margin: 0;
+      }
+    </style>
+    
+    <meta name="theme-color" content="#2563eb" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Komari Monitor" />
+    <link rel="apple-touch-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon.ico" />
+    
+    <meta property="og:title" content="Komari Monitor" />
+    <meta property="og:description" content="A simple server monitor tool." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Komari Monitor" />
+    <meta name="twitter:description" content="A simple server monitor tool." />
+    <title>Komari Monitor</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

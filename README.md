@@ -2,12 +2,12 @@
 
 面向 Komari 的 ServerStatus 风格主题。界面按照经典 Nezha ServerStatus 的紧凑表格、分组卡片、状态点、渐变用量条和响应式导航重新实现，数据层使用 Komari 原生 RPC2。
 
-此仓库是为 `small.bismih520.com` 定制的流量额度版本，基于 [tfhmc/serverstatus](https://github.com/tfhmc/serverstatus)。它保留原主题外观，并为每台节点增加流量额度进度条；额度为 `0 B` 的节点显示为不限流量。
+此仓库是为 `small.bismih520.com` 定制的流量额度版本，基于 [tfhmc/serverstatus](https://github.com/tfhmc/serverstatus)。它保留原主题外观，并为每台节点增加剩余流量额度进度条；额度为 `0 B` 的节点显示为不限流量。账户状态加载时预留固定空间，避免登录用户刷新页面时短暂出现设置齿轮。
 
 ## 功能
 
 - 首页严格遵循后台节点顺序，并支持分组/单表切换、节点详情展开、暗色模式和移动端横向表格。
-- 流量额度按照 Komari 节点设置中的统计方式（上传、下载、总和、较大值或较小值）计算并显示百分比。
+- 流量额度按照 Komari 节点设置中的统计方式（上传、下载、总和、较大值或较小值）计算；进度条从满格开始，使用后逐渐减少。
 - `/network` 提供节点搜索、切换和 24 小时延迟图。
 - 左上角读取 Komari 后台上传的 `/favicon.ico`。
 - 保留 Komari 原生 `/admin`、`/terminal`、登录和节点详情能力。
@@ -16,7 +16,7 @@
 
 ## 安装
 
-在 Komari 后台的主题管理页面上传仓库根目录的 `ServerStatusQuota-v1.0.18-quota.1.zip`，随后应用主题。ZIP 根目录包含：
+在 Komari 后台的主题管理页面上传仓库根目录的 `ServerStatusQuota2-v1.0.18-quota.2.zip`，随后应用主题。ZIP 根目录包含：
 
 ```text
 komari-theme.json

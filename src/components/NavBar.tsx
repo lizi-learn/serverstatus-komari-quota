@@ -74,7 +74,9 @@ function Navigation() {
         </nav>
 
         <div className="ss-account">
-          {!loading && account?.logged_in ? (
+          {loading ? (
+            <span className="ss-account-loading" aria-hidden="true" />
+          ) : account?.logged_in ? (
             <div className="ss-account-menu">
               <button type="button" onClick={() => setAccountOpen((open) => !open)}>
                 <UserRound />

@@ -32,6 +32,8 @@ const TEXT = {
     traffic: "流量↓|↑",
     quota: "额度",
     unlimited: "不限流量",
+    used: "已用",
+    remaining: "剩余",
     cpu: "核心",
     memory: "内存",
     disk: "硬盘",
@@ -56,6 +58,8 @@ const TEXT = {
     traffic: "NetTransfer ↓|↑",
     quota: "Quota",
     unlimited: "Unlimited",
+    used: "Used",
+    remaining: "Remaining",
     cpu: "CPU",
     memory: "Memory",
     disk: "Disk",
@@ -88,8 +92,17 @@ function sortNodes(nodes: NodeBasicInfo[]) {
     .map(({ node }) => node);
 }
 
-function ProgressBar({ value, online }: { value: number; online: boolean }) {
+function ProgressBar({
+  value,
+  online,
+  toneValue = value,
+}: {
+  value: number;
+  online: boolean;
+  toneValue?: number;
+}) {
   const safeValue = Math.min(100, Math.max(0, Number(value) || 0));
+  const safeToneValue = Math.min(100, Math.max(0, Number(toneValue) || 0));
   return (
     <div
       className={`ss-progress ${online ? "" : "is-offline"}`}
@@ -99,7 +112,7 @@ function ProgressBar({ value, online }: { value: number; online: boolean }) {
       aria-valuenow={online ? safeValue : undefined}
     >
       <span
-        className={`ss-progress-bar is-${progressTone(safeValue, online)}`}
+        className={`ss-progress-bar is-${progressTone(safeToneValue, online)}`}
         style={{ transform: `scaleX(${safeValue / 100})` }}
         aria-hidden="true"
       />
@@ -148,12 +161,15 @@ function TrafficQuota({
   }
 
   const used = trafficUsed(node, record);
-  const value = percent(used, limit);
-  const detail = `${formatCompactBytes(used)} / ${formatCompactBytes(limit)} (${formatPercent(value)}%)`;
+  const usedPercent = percent(used, limit);
+  const remainingPercent = Math.max(0, 100 - usedPercent);
+  const detail = chinese
+    ? `已用 ${formatCompactBytes(used)} / ${formatCompactBytes(limit)} · 剩余 ${formatPercent(remainingPercent)}%`
+    : `Used ${formatCompactBytes(used)} / ${formatCompactBytes(limit)} · ${formatPercent(remainingPercent)}% remaining`;
 
   return (
     <span className="ss-quota-progress" title={detail} aria-label={detail}>
-      <ProgressBar value={value} online={online} />
+      <ProgressBar value={remainingPercent} toneValue={usedPercent} online={online} />
     </span>
   );
 }
@@ -205,6 +221,7 @@ function NodeDetails({
   const trafficLimit = Number(node.traffic_limit) || 0;
   const trafficUsedBytes = trafficUsed(node, record);
   const trafficPercent = percent(trafficUsedBytes, trafficLimit);
+  const trafficRemainingPercent = Math.max(0, 100 - trafficPercent);
 
   return (
     <div className="ss-node-details">
@@ -231,7 +248,7 @@ function NodeDetails({
       </DetailLine>
       <DetailLine label={labels.quota}>
         {trafficLimit > 0
-          ? `${formatCompactBytes(trafficUsedBytes)} / ${formatCompactBytes(trafficLimit)} (${formatPercent(trafficPercent)}%)`
+          ? `${labels.used} ${formatCompactBytes(trafficUsedBytes)} / ${formatCompactBytes(trafficLimit)} · ${labels.remaining} ${formatPercent(trafficRemainingPercent)}%`
           : labels.unlimited}
       </DetailLine>
       <DetailLine label={labels.load}>

@@ -116,6 +116,12 @@
   align-items: stretch;
 }
 
+.ss-account-loading {
+  width: 78px;
+  height: 50px;
+  display: block;
+}
+
 .ss-account-menu {
   position: relative;
 }

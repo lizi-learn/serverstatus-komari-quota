@@ -3,7 +3,7 @@ import type { NodeBasicInfo } from "@/contexts/NodeListContext";
 import { useRPC2Call } from "@/contexts/RPC2Context";
 import type { QueryMetricsResponse } from "@/types/metrics";
 import { parseNodeMetadata } from "./nodeMetadata";
-import { billingCycleRange } from "./trafficCycle";
+import { billingCycleRange, effectiveTrafficQueryStart } from "./trafficCycle";
 
 const TRAFFIC_METRICS = ["traffic.up", "traffic.down"] as const;
 const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
@@ -20,6 +20,7 @@ export type MonthlyTrafficUsage = {
 
 type QueryGroup = {
   start: Date;
+  queryStart: Date;
   nextReset: Date;
   nodes: NodeBasicInfo[];
 };
@@ -33,11 +34,16 @@ function historyIsComplete(historySince: string | undefined, cycleStart: Date) {
 function buildQueryGroups(nodes: NodeBasicInfo[], now: Date): QueryGroup[] {
   const groups = new Map<string, QueryGroup>();
   for (const node of nodes) {
-    const resetDay = parseNodeMetadata(node.tags).trafficResetDay;
+    const metadata = parseNodeMetadata(node.tags);
+    const resetDay = metadata.trafficResetDay;
     if (!resetDay) continue;
     const range = billingCycleRange(resetDay, now);
-    const key = `${range.start.toISOString()}|${range.nextReset.toISOString()}`;
-    const group = groups.get(key) ?? { ...range, nodes: [] };
+    const queryStart = effectiveTrafficQueryStart(
+      range.start,
+      metadata.trafficHistorySince,
+    );
+    const key = `${range.start.toISOString()}|${queryStart.toISOString()}|${range.nextReset.toISOString()}`;
+    const group = groups.get(key) ?? { ...range, queryStart, nodes: [] };
     group.nodes.push(node);
     groups.set(key, group);
   }
@@ -91,7 +97,7 @@ export function useMonthlyTraffic(nodes: NodeBasicInfo[]) {
               {
                 metric_keys: [...TRAFFIC_METRICS],
                 entity_ids: group.nodes.map((node) => node.uuid),
-                start: group.start.toISOString(),
+                start: group.queryStart.toISOString(),
                 end: now.toISOString(),
                 aggregation_by_metric: {
                   "traffic.up": "sum",

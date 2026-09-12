@@ -20,7 +20,7 @@
 
 ## 安装
 
-在 Komari 后台把 `traffic.up` 和 `traffic.down` 的指标保留时间设为至少 35 天，再于主题管理页面上传仓库根目录的 `ServerStatusQuota4-v1.0.18-quota.6.zip` 并应用。ZIP 根目录包含：
+在 Komari 后台把 `traffic.up` 和 `traffic.down` 的指标保留时间设为至少 35 天，再于主题管理页面上传仓库根目录的 `ServerStatusQuota4-v1.0.18-quota.7.zip` 并应用。ZIP 根目录包含：
 
 ```text
 komari-theme.json

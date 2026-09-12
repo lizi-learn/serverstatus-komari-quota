@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   billingCycleRange,
+  effectiveTrafficQueryStart,
   trafficValue,
 } from "../src/theme-server-status/trafficCycle.ts";
 
@@ -42,4 +43,16 @@ test("traffic quota modes use the provider-selected direction", () => {
   assert.equal(trafficValue("min", 40, 60), 40);
   assert.equal(trafficValue("up", 40, 60), 40);
   assert.equal(trafficValue("down", 40, 60), 60);
+});
+
+test("partial first cycle queries from history start", () => {
+  const cycleStart = new Date(2026, 7, 25);
+  assert.equal(
+    effectiveTrafficQueryStart(cycleStart, "2026-09-13").getTime(),
+    new Date(2026, 8, 13).getTime(),
+  );
+  assert.equal(
+    effectiveTrafficQueryStart(new Date(2026, 8, 25), "2026-09-13").getTime(),
+    new Date(2026, 8, 25).getTime(),
+  );
 });

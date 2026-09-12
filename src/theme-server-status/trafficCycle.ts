@@ -33,6 +33,16 @@ export function billingCycleRange(
   };
 }
 
+export function effectiveTrafficQueryStart(
+  cycleStart: Date,
+  historySince: string | undefined,
+): Date {
+  if (!historySince) return cycleStart;
+  const historyStart = new Date(`${historySince}T00:00:00`);
+  if (!Number.isFinite(historyStart.getTime())) return cycleStart;
+  return historyStart.getTime() > cycleStart.getTime() ? historyStart : cycleStart;
+}
+
 export function trafficValue(
   type: TrafficLimitType,
   up: number,

@@ -68,7 +68,7 @@ const TEXT = {
     noReset: "无需重置",
     unknownReset: "未确认",
     inferred: "推定",
-    nextReset: "下次刷新",
+    nextReset: "下次重置",
     partialCycle: "本周期数据不完整",
     monthlyUnavailable: "月度用量暂不可用",
     recordedSince: "记录始于",
@@ -208,14 +208,20 @@ function TrafficQuota({
   const limit = Number(node.traffic_limit) || 0;
   if (limit <= 0) {
     const partial = monthly && !monthly.complete;
+    const cycleTotal = monthly?.hasData
+      ? trafficValue("sum", monthly.up, monthly.down)
+      : undefined;
     const detail = monthly?.hasData
       ? (chinese
-          ? `本期下载 ${formatCompactBytes(monthly.down)} / 上传 ${formatCompactBytes(monthly.up)}${partial ? ` · ${labels.partialCycle}${monthly.historySince ? `，${labels.recordedSince} ${monthly.historySince}` : ""}` : ""}`
-          : `Cycle download ${formatCompactBytes(monthly.down)} / upload ${formatCompactBytes(monthly.up)}${partial ? ` · ${labels.partialCycle}${monthly.historySince ? `, ${labels.recordedSince} ${monthly.historySince}` : ""}` : ""}`)
+          ? `本期下载 ${formatCompactBytes(monthly.down)} / 上传 ${formatCompactBytes(monthly.up)} · 合计 ${formatCompactBytes(cycleTotal ?? 0)} · ${labels.nextReset} ${formatDateOnly(monthly.nextReset)}${partial ? ` · ${labels.partialCycle}${monthly.historySince ? `，${labels.recordedSince} ${monthly.historySince}` : ""}` : ""}`
+          : `Cycle download ${formatCompactBytes(monthly.down)} / upload ${formatCompactBytes(monthly.up)} · total ${formatCompactBytes(cycleTotal ?? 0)} · ${labels.nextReset} ${formatDateOnly(monthly.nextReset)}${partial ? ` · ${labels.partialCycle}${monthly.historySince ? `, ${labels.recordedSince} ${monthly.historySince}` : ""}` : ""}`)
       : labels.unlimited;
+    const label = cycleTotal === undefined
+      ? `∞${monthlyLoading ? " · …" : ""}`
+      : `∞ · ${partial ? "~" : ""}${formatCompactBytes(cycleTotal)}`;
     return (
       <span className="ss-quota-progress" title={detail} aria-label={detail}>
-        <ProgressBar value={100} toneValue={0} online={online} label="∞" />
+        <ProgressBar value={100} toneValue={0} online={online} label={label} />
       </span>
     );
   }
@@ -413,7 +419,7 @@ function NodeDetails({
           : trafficLimit > 0
             ? (monthlyLoading ? "…" : `${labels.monthlyUnavailable}${monthlyError ? `: ${monthlyError}` : ""}`)
           : monthly?.hasData
-            ? `${labels.unlimited} · ${monthly.complete ? "" : "~"}${labels.used} ${formatCompactBytes(trafficValue("sum", monthly.up, monthly.down))}`
+            ? `${labels.unlimited} · ${monthly.complete ? "" : "~"}${labels.used} ${formatCompactBytes(trafficValue("sum", monthly.up, monthly.down))} · ${labels.nextReset} ${formatDateOnly(monthly.nextReset)}`
             : labels.unlimited}
       </DetailLine>
       <DetailLine label={labels.load}>

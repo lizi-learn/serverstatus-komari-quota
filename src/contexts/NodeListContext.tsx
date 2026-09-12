@@ -1,5 +1,6 @@
 import React from "react";
 import { useRPC2Call } from "./RPC2Context";
+import { isFleetVisible } from "@/theme-server-status/nodeMetadata";
 
 export type NodeBasicInfo = {
   uuid: string;
@@ -30,6 +31,7 @@ export type NodeBasicInfo = {
   ipv4?: string; 
   ipv6?: string;
   public_remark?: string;
+  hidden?: boolean;
 };
 
 interface NodeListContextType {
@@ -117,7 +119,8 @@ export const NodeListProvider: React.FC<{ children: React.ReactNode }> = ({
           ipv4: n.ipv4,
           ipv6: n.ipv6,
           public_remark: n.public_remark ?? "",
-        }));
+          hidden: n.hidden ?? false,
+        })).filter((node) => isFleetVisible(node.hidden));
         setError(null);
         setNodeList((previous) => {
           if (!previous) return list;

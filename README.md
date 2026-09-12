@@ -9,6 +9,7 @@
 - 首页严格遵循后台节点顺序，并支持分组/单表切换、节点详情展开、暗色模式和移动端横向表格。
 - 流量额度按照 Komari 节点设置中的统计方式（上传、下载、总和、较大值或较小值）计算；进度条从满格开始，使用后逐渐减少。
 - 节点标签支持 `bw-down=100;bw-up=100;lifecycle=keep;role=...`。桌面表格显示标称下载/上传上限，窄屏在展开详情中显示；`lifecycle` 可为 `keep` 或 `evaluate`。
+- Komari 后台标为“隐藏”的节点在本主题首页始终不渲染，即使浏览器同时登录了管理员；后台监控数据与历史仍会保留。
 - `/network` 提供节点搜索、切换和 24 小时延迟图。
 - 左上角读取 Komari 后台上传的 `/favicon.ico`。
 - 保留 Komari 原生 `/admin`、`/terminal`、登录和节点详情能力。
@@ -17,7 +18,7 @@
 
 ## 安装
 
-在 Komari 后台的主题管理页面上传仓库根目录的 `ServerStatusQuota4-v1.0.18-quota.4.zip`，随后应用主题。ZIP 根目录包含：
+在 Komari 后台的主题管理页面上传仓库根目录的 `ServerStatusQuota4-v1.0.18-quota.4.1.zip`，随后应用主题。ZIP 根目录包含：
 
 ```text
 komari-theme.json

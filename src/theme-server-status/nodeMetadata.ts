@@ -43,3 +43,7 @@ export function formatMbps(value: number | undefined): string {
   if (value >= 1000 && value % 1000 === 0) return `${value / 1000}G`;
   return `${value}M`;
 }
+
+export function isFleetVisible(hidden: boolean | undefined): boolean {
+  return hidden !== true;
+}

@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { formatMbps, parseNodeMetadata } from "../src/theme-server-status/nodeMetadata.ts";
+import {
+  formatMbps,
+  isFleetVisible,
+  parseNodeMetadata,
+} from "../src/theme-server-status/nodeMetadata.ts";
 
 test("parses structured node metadata without depending on tag order", () => {
   assert.deepEqual(
@@ -27,4 +31,10 @@ test("formats exact advertised Mbps values compactly", () => {
   assert.equal(formatMbps(100), "100M");
   assert.equal(formatMbps(1000), "1G");
   assert.equal(formatMbps(1040), "1040M");
+});
+
+test("fleet theme always excludes Komari hidden nodes", () => {
+  assert.equal(isFleetVisible(false), true);
+  assert.equal(isFleetVisible(undefined), true);
+  assert.equal(isFleetVisible(true), false);
 });

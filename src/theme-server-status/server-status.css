@@ -222,7 +222,7 @@
 
 .ss-table {
   width: 100%;
-  min-width: 1310px;
+  min-width: 1490px;
   margin: 0;
   color: inherit;
   font-size: 14px;
@@ -315,6 +315,15 @@
 
 .ss-col-cap {
   min-width: 100px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ss-col-cycle {
+  min-width: 92px;
+}
+
+.ss-col-expiry {
+  min-width: 74px;
   font-variant-numeric: tabular-nums;
 }
 
@@ -999,40 +1008,48 @@
   }
 
   .ss-col-status {
-    width: 5%;
+    width: 4%;
   }
 
   .ss-col-name {
-    width: 13%;
+    width: 11%;
   }
 
   .ss-col-os {
-    width: 8%;
+    width: 7%;
   }
 
   .ss-col-location,
   .ss-col-uptime {
-    width: 5.5%;
+    width: 4.5%;
   }
 
   .ss-col-load {
-    width: 5%;
+    width: 4%;
   }
 
   .ss-col-network {
-    width: 11%;
+    width: 10%;
   }
 
   .ss-col-cap {
-    width: 8%;
+    width: 7%;
+  }
+
+  .ss-col-cycle {
+    width: 7%;
+  }
+
+  .ss-col-expiry {
+    width: 6%;
   }
 
   .ss-col-traffic {
-    width: 11%;
+    width: 10%;
   }
 
   .ss-col-usage {
-    width: 7%;
+    width: 6%;
   }
 
   .ss-region,
@@ -1088,7 +1105,9 @@
   .ss-col-os,
   .ss-col-uptime,
   .ss-col-traffic,
-  .ss-col-cap {
+  .ss-col-cap,
+  .ss-col-cycle,
+  .ss-col-expiry {
     display: none !important;
   }
 

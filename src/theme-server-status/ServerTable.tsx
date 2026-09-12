@@ -12,7 +12,12 @@ import {
   percent,
   progressTone,
 } from "./format";
-import { formatMbps, parseNodeMetadata } from "./nodeMetadata";
+import {
+  daysUntil,
+  formatDateOnly,
+  formatMbps,
+  parseNodeMetadata,
+} from "./nodeMetadata";
 
 type ServerTableProps = {
   nodes: NodeBasicInfo[];
@@ -31,6 +36,8 @@ const TEXT = {
     load: "负载",
     speed: "网速↓|↑",
     bandwidth: "上限↓|↑",
+    cycle: "流量周期",
+    expiry: "到期",
     traffic: "流量↓|↑",
     quota: "额度",
     unlimited: "不限流量",
@@ -53,6 +60,11 @@ const TEXT = {
     keep: "长期持有",
     evaluate: "待评估",
     role: "用途",
+    noReset: "无需重置",
+    unknownReset: "未确认",
+    inferred: "推定",
+    daysLeft: "天",
+    expired: "已到期",
   },
   en: {
     status: "Status",
@@ -63,6 +75,8 @@ const TEXT = {
     load: "Load",
     speed: "NetSpeed ↓|↑",
     bandwidth: "Cap ↓|↑",
+    cycle: "Traffic cycle",
+    expiry: "Expires",
     traffic: "NetTransfer ↓|↑",
     quota: "Quota",
     unlimited: "Unlimited",
@@ -85,6 +99,11 @@ const TEXT = {
     keep: "Long-term",
     evaluate: "Evaluate",
     role: "Role",
+    noReset: "No reset",
+    unknownReset: "Unknown",
+    inferred: "inferred",
+    daysLeft: "d",
+    expired: "Expired",
   },
 } as const;
 
@@ -236,6 +255,32 @@ function AdvertisedBandwidth({
   );
 }
 
+function TrafficCycle({ node, chinese }: { node: NodeBasicInfo; chinese: boolean }) {
+  const labels = chinese ? TEXT.zh : TEXT.en;
+  if ((Number(node.traffic_limit) || 0) <= 0) return <span>{labels.noReset}</span>;
+  const metadata = parseNodeMetadata(node.tags);
+  if (!metadata.trafficResetDay) return <span>{labels.unknownReset}</span>;
+  const inferred = metadata.trafficResetSource === "inferred";
+  const text = chinese
+    ? `每月${metadata.trafficResetDay}日${inferred ? "*" : ""}`
+    : `Day ${metadata.trafficResetDay}${inferred ? "*" : ""}`;
+  const title = inferred
+    ? (chinese ? "按账单周年日推定，待服务商面板确认" : "Inferred from billing anniversary; provider confirmation pending")
+    : (chinese ? "服务商已确认的月度重置日" : "Provider-confirmed monthly reset day");
+  return <span title={title}>{text}</span>;
+}
+
+function Expiry({ node, chinese }: { node: NodeBasicInfo; chinese: boolean }) {
+  const labels = chinese ? TEXT.zh : TEXT.en;
+  const remaining = daysUntil(node.expired_at);
+  if (remaining === undefined) return <span>-</span>;
+  return (
+    <span title={formatDateOnly(node.expired_at)}>
+      {remaining <= 0 ? labels.expired : `${remaining}${labels.daysLeft}`}
+    </span>
+  );
+}
+
 function NodeDetails({
   node,
   record,
@@ -286,6 +331,15 @@ function NodeDetails({
       <DetailLine label={labels.advertisedBandwidth}>
         {chinese ? "下载 " : "Download "}{formatMbps(metadata.bandwidthDownMbps)}bps / {chinese ? "上传 " : "Upload "}{formatMbps(metadata.bandwidthUpMbps)}bps
       </DetailLine>
+      <DetailLine label={labels.cycle}>
+        <TrafficCycle node={node} chinese={chinese} />
+        {metadata.trafficResetSource === "inferred" && ` (${labels.inferred})`}
+      </DetailLine>
+      <DetailLine label={labels.expiry}>
+        {formatDateOnly(node.expired_at)}
+        {daysUntil(node.expired_at) !== undefined &&
+          ` (${(daysUntil(node.expired_at) ?? 0) <= 0 ? labels.expired : `${daysUntil(node.expired_at)}${labels.daysLeft}`})`}
+      </DetailLine>
       {metadata.lifecycle && (
         <DetailLine label={labels.lifecycle}>
           {metadata.lifecycle === "keep" ? labels.keep : labels.evaluate}
@@ -332,7 +386,7 @@ function GroupTable({
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
   const labels = chinese ? TEXT.zh : TEXT.en;
   const onlineSet = useMemo(() => new Set(liveData.online), [liveData.online]);
-  const columns = 13;
+  const columns = 15;
 
   const toggle = (uuid: string) => {
     setExpanded((current) => {
@@ -360,6 +414,8 @@ function GroupTable({
               <th className="ss-col-load">{labels.load}</th>
               <th className="ss-col-network">{labels.speed}</th>
               <th className="ss-col-cap">{labels.bandwidth}</th>
+              <th className="ss-col-cycle">{labels.cycle}</th>
+              <th className="ss-col-expiry">{labels.expiry}</th>
               <th className="ss-col-traffic">{labels.traffic}</th>
               <th className="ss-col-usage ss-col-quota">{labels.quota}</th>
               <th className="ss-col-usage">{labels.cpu}</th>
@@ -483,6 +539,12 @@ function FragmentRow({
         </td>
         <td className="ss-col-cap" data-mobile-label={labels.bandwidth}>
           <AdvertisedBandwidth node={node} chinese={chinese} />
+        </td>
+        <td className="ss-col-cycle" data-mobile-label={labels.cycle}>
+          <TrafficCycle node={node} chinese={chinese} />
+        </td>
+        <td className="ss-col-expiry" data-mobile-label={labels.expiry}>
+          <Expiry node={node} chinese={chinese} />
         </td>
         <td className="ss-col-traffic">
           {record

@@ -5,6 +5,8 @@ export type NodeMetadata = {
   bandwidthUpMbps?: number;
   lifecycle?: Lifecycle;
   role?: string;
+  trafficResetDay?: number;
+  trafficResetSource?: "confirmed" | "inferred";
 };
 
 const positiveNumber = (value: string): number | undefined => {
@@ -33,6 +35,18 @@ export function parseNodeMetadata(tags: string | undefined): NodeMetadata {
       result.lifecycle = value;
     }
     if (key === "role" && value) result.role = value;
+    if (key === "traffic-reset-day") {
+      const parsed = Number(value);
+      if (Number.isInteger(parsed) && parsed >= 1 && parsed <= 31) {
+        result.trafficResetDay = parsed;
+      }
+    }
+    if (
+      key === "traffic-reset-source" &&
+      (value === "confirmed" || value === "inferred")
+    ) {
+      result.trafficResetSource = value;
+    }
   }
 
   return result;
@@ -46,4 +60,25 @@ export function formatMbps(value: number | undefined): string {
 
 export function isFleetVisible(hidden: boolean | undefined): boolean {
   return hidden !== true;
+}
+
+export function daysUntil(
+  value: string | number | undefined,
+  now: number = Date.now(),
+): number | undefined {
+  if (value === undefined || value === "") return undefined;
+  const timestamp = new Date(value).getTime();
+  if (!Number.isFinite(timestamp)) return undefined;
+  return Math.ceil((timestamp - now) / 86_400_000);
+}
+
+export function formatDateOnly(value: string | number | undefined): string {
+  if (value === undefined || value === "") return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+  ].join("-");
 }

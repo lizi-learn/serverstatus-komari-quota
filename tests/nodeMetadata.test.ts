@@ -11,7 +11,7 @@ import {
 
 test("parses structured node metadata without depending on tag order", () => {
   assert.deepEqual(
-    parseNodeMetadata("vpn; lifecycle=keep ; bw-up=100 ;role=dmca-resistant; bw-down=100;traffic-reset-day=12;traffic-reset-source=inferred"),
+    parseNodeMetadata("vpn; lifecycle=keep ; bw-up=100 ;role=dmca-resistant; bw-down=100;traffic-reset-day=12;traffic-reset-source=inferred;traffic-history-since=2026-09-13"),
     {
       bandwidthDownMbps: 100,
       bandwidthUpMbps: 100,
@@ -19,6 +19,7 @@ test("parses structured node metadata without depending on tag order", () => {
       role: "dmca-resistant",
       trafficResetDay: 12,
       trafficResetSource: "inferred",
+      trafficHistorySince: "2026-09-13",
     },
   );
 });
@@ -51,6 +52,11 @@ test("rejects impossible reset days", () => {
   assert.deepEqual(parseNodeMetadata("traffic-reset-day=31"), {
     trafficResetDay: 31,
   });
+});
+
+test("rejects malformed traffic history dates", () => {
+  assert.deepEqual(parseNodeMetadata("traffic-history-since=2026/09/13"), {});
+  assert.deepEqual(parseNodeMetadata("traffic-history-since=not-a-date"), {});
 });
 
 test("formats expiry dates and remaining days deterministically", () => {

@@ -18,6 +18,11 @@ import {
   formatMbps,
   parseNodeMetadata,
 } from "./nodeMetadata";
+import {
+  useMonthlyTraffic,
+  type MonthlyTrafficUsage,
+} from "./monthlyTraffic";
+import { billingCycleRange, trafficValue } from "./trafficCycle";
 
 type ServerTableProps = {
   nodes: NodeBasicInfo[];
@@ -38,7 +43,7 @@ const TEXT = {
     bandwidth: "上限↓|↑",
     cycle: "流量周期",
     expiry: "到期",
-    traffic: "流量↓|↑",
+    traffic: "本期↓|↑",
     quota: "额度",
     unlimited: "不限流量",
     used: "已用",
@@ -63,6 +68,11 @@ const TEXT = {
     noReset: "无需重置",
     unknownReset: "未确认",
     inferred: "推定",
+    nextReset: "下次刷新",
+    partialCycle: "本周期数据不完整",
+    monthlyUnavailable: "月度用量暂不可用",
+    recordedSince: "记录始于",
+    bootTraffic: "自开机流量",
     daysLeft: "天",
     expired: "已到期",
   },
@@ -77,7 +87,7 @@ const TEXT = {
     bandwidth: "Cap ↓|↑",
     cycle: "Traffic cycle",
     expiry: "Expires",
-    traffic: "NetTransfer ↓|↑",
+    traffic: "Cycle ↓|↑",
     quota: "Quota",
     unlimited: "Unlimited",
     used: "Used",
@@ -102,6 +112,11 @@ const TEXT = {
     noReset: "No reset",
     unknownReset: "Unknown",
     inferred: "inferred",
+    nextReset: "Next reset",
+    partialCycle: "Partial current cycle",
+    monthlyUnavailable: "Monthly usage unavailable",
+    recordedSince: "Recorded since",
+    bootTraffic: "Since boot",
     daysLeft: "d",
     expired: "Expired",
   },
@@ -155,23 +170,21 @@ function ProgressBar({
   );
 }
 
-function trafficUsed(node: NodeBasicInfo, record?: LiveRecord): number {
-  const up = record?.network.totalUp ?? 0;
-  const down = record?.network.totalDown ?? 0;
-
-  switch (node.traffic_limit_type) {
-    case "sum":
-      return up + down;
-    case "min":
-      return Math.min(up, down);
-    case "up":
-      return up;
-    case "down":
-      return down;
-    case "max":
-    default:
-      return Math.max(up, down);
+function trafficUsed(
+  node: NodeBasicInfo,
+  record?: LiveRecord,
+  monthly?: MonthlyTrafficUsage,
+): number | undefined {
+  const metadata = parseNodeMetadata(node.tags);
+  if (metadata.trafficResetDay) {
+    if (!monthly?.hasData) return undefined;
+    return trafficValue(node.traffic_limit_type, monthly.up, monthly.down);
   }
+  return trafficValue(
+    node.traffic_limit_type,
+    record?.network.totalUp ?? 0,
+    record?.network.totalDown ?? 0,
+  );
 }
 
 function TrafficQuota({
@@ -179,31 +192,63 @@ function TrafficQuota({
   record,
   online,
   chinese,
+  monthly,
+  monthlyLoading,
+  monthlyError,
 }: {
   node: NodeBasicInfo;
   record?: LiveRecord;
   online: boolean;
   chinese: boolean;
+  monthly?: MonthlyTrafficUsage;
+  monthlyLoading: boolean;
+  monthlyError: string | null;
 }) {
+  const labels = chinese ? TEXT.zh : TEXT.en;
   const limit = Number(node.traffic_limit) || 0;
   if (limit <= 0) {
+    const partial = monthly && !monthly.complete;
+    const detail = monthly?.hasData
+      ? (chinese
+          ? `本期下载 ${formatCompactBytes(monthly.down)} / 上传 ${formatCompactBytes(monthly.up)}${partial ? ` · ${labels.partialCycle}${monthly.historySince ? `，${labels.recordedSince} ${monthly.historySince}` : ""}` : ""}`
+          : `Cycle download ${formatCompactBytes(monthly.down)} / upload ${formatCompactBytes(monthly.up)}${partial ? ` · ${labels.partialCycle}${monthly.historySince ? `, ${labels.recordedSince} ${monthly.historySince}` : ""}` : ""}`)
+      : labels.unlimited;
     return (
-      <span className="ss-quota-progress" title={chinese ? "不限流量" : "Unlimited traffic"}>
+      <span className="ss-quota-progress" title={detail} aria-label={detail}>
         <ProgressBar value={100} toneValue={0} online={online} label="∞" />
       </span>
     );
   }
 
-  const used = trafficUsed(node, record);
+  const used = trafficUsed(node, record, monthly);
+  if (used === undefined) {
+    const title = monthlyLoading
+      ? (chinese ? "正在读取本账期流量" : "Loading current billing-cycle traffic")
+      : `${labels.monthlyUnavailable}${monthlyError ? `: ${monthlyError}` : ""}`;
+    return (
+      <span className="ss-quota-progress" title={title} aria-label={title}>
+        <ProgressBar value={100} toneValue={0} online={online} label="…" />
+      </span>
+    );
+  }
   const usedPercent = percent(used, limit);
   const remainingPercent = Math.max(0, 100 - usedPercent);
-  const detail = chinese
+  const partial = monthly && !monthly.complete;
+  const detailBase = chinese
     ? `已用 ${formatCompactBytes(used)} / ${formatCompactBytes(limit)} · 剩余 ${formatPercent(remainingPercent)}%`
     : `Used ${formatCompactBytes(used)} / ${formatCompactBytes(limit)} · ${formatPercent(remainingPercent)}% remaining`;
+  const detail = partial
+    ? `${detailBase} · ${labels.partialCycle}${monthly.historySince ? `，${labels.recordedSince} ${monthly.historySince}` : ""}`
+    : detailBase;
 
   return (
     <span className="ss-quota-progress" title={detail} aria-label={detail}>
-      <ProgressBar value={remainingPercent} toneValue={usedPercent} online={online} />
+      <ProgressBar
+        value={remainingPercent}
+        toneValue={usedPercent}
+        online={online}
+        label={`${partial ? "~" : ""}${formatPercent(remainingPercent)}%`}
+      />
     </span>
   );
 }
@@ -257,16 +302,19 @@ function AdvertisedBandwidth({
 
 function TrafficCycle({ node, chinese }: { node: NodeBasicInfo; chinese: boolean }) {
   const labels = chinese ? TEXT.zh : TEXT.en;
-  if ((Number(node.traffic_limit) || 0) <= 0) return <span>{labels.noReset}</span>;
   const metadata = parseNodeMetadata(node.tags);
-  if (!metadata.trafficResetDay) return <span>{labels.unknownReset}</span>;
+  if (!metadata.trafficResetDay) {
+    return <span>{(Number(node.traffic_limit) || 0) <= 0 ? labels.noReset : labels.unknownReset}</span>;
+  }
   const inferred = metadata.trafficResetSource === "inferred";
+  const range = billingCycleRange(metadata.trafficResetDay);
   const text = chinese
     ? `每月${metadata.trafficResetDay}日${inferred ? "*" : ""}`
     : `Day ${metadata.trafficResetDay}${inferred ? "*" : ""}`;
-  const title = inferred
+  const sourceTitle = inferred
     ? (chinese ? "按账单周年日推定，待服务商面板确认" : "Inferred from billing anniversary; provider confirmation pending")
     : (chinese ? "服务商已确认的月度重置日" : "Provider-confirmed monthly reset day");
+  const title = `${sourceTitle}；${labels.nextReset}: ${formatDateOnly(range.nextReset.toISOString())}`;
   return <span title={title}>{text}</span>;
 }
 
@@ -286,11 +334,17 @@ function NodeDetails({
   record,
   online,
   chinese,
+  monthly,
+  monthlyLoading,
+  monthlyError,
 }: {
   node: NodeBasicInfo;
   record?: LiveRecord;
   online: boolean;
   chinese: boolean;
+  monthly?: MonthlyTrafficUsage;
+  monthlyLoading: boolean;
+  monthlyError: string | null;
 }) {
   const labels = chinese ? TEXT.zh : TEXT.en;
   const cpu = record?.cpu.usage ?? 0;
@@ -300,8 +354,8 @@ function NodeDetails({
   const uptime = record?.uptime ?? 0;
   const bootTime = uptime > 0 ? Date.now() - uptime * 1000 : undefined;
   const trafficLimit = Number(node.traffic_limit) || 0;
-  const trafficUsedBytes = trafficUsed(node, record);
-  const trafficPercent = percent(trafficUsedBytes, trafficLimit);
+  const trafficUsedBytes = trafficUsed(node, record, monthly);
+  const trafficPercent = percent(trafficUsedBytes ?? 0, trafficLimit);
   const trafficRemainingPercent = Math.max(0, 100 - trafficPercent);
   const metadata = parseNodeMetadata(node.tags);
 
@@ -325,8 +379,15 @@ function NodeDetails({
           ? `${formatCompactBytes(record?.swap.used ?? 0)} / ${formatCompactBytes(node.swap_total)} (${formatPercent(swap)}%)`
           : "OFF"}
       </DetailLine>
-      <DetailLine label={labels.traffic}>
+      <DetailLine label={labels.bootTraffic}>
         IN {formatCompactBytes(record?.network.totalDown ?? 0)} / OUT {formatCompactBytes(record?.network.totalUp ?? 0)}
+      </DetailLine>
+      <DetailLine label={labels.traffic}>
+        {monthly?.hasData
+          ? `${monthly.complete ? "" : "~"}${formatCompactBytes(monthly.down)} / ${formatCompactBytes(monthly.up)}`
+          : parseNodeMetadata(node.tags).trafficResetDay
+            ? (monthlyLoading ? "…" : labels.monthlyUnavailable)
+            : "-"}
       </DetailLine>
       <DetailLine label={labels.advertisedBandwidth}>
         {chinese ? "下载 " : "Download "}{formatMbps(metadata.bandwidthDownMbps)}bps / {chinese ? "上传 " : "Upload "}{formatMbps(metadata.bandwidthUpMbps)}bps
@@ -347,9 +408,13 @@ function NodeDetails({
       )}
       {metadata.role && <DetailLine label={labels.role}>{metadata.role}</DetailLine>}
       <DetailLine label={labels.quota}>
-        {trafficLimit > 0
-          ? `${labels.used} ${formatCompactBytes(trafficUsedBytes)} / ${formatCompactBytes(trafficLimit)} · ${labels.remaining} ${formatPercent(trafficRemainingPercent)}%`
-          : labels.unlimited}
+        {trafficLimit > 0 && trafficUsedBytes !== undefined
+          ? `${monthly && !monthly.complete ? "~" : ""}${labels.used} ${formatCompactBytes(trafficUsedBytes)} / ${formatCompactBytes(trafficLimit)} · ${labels.remaining} ${formatPercent(trafficRemainingPercent)}%${monthly && !monthly.complete ? ` · ${labels.partialCycle}${monthly.historySince ? `，${labels.recordedSince} ${monthly.historySince}` : ""}` : ""}`
+          : trafficLimit > 0
+            ? (monthlyLoading ? "…" : `${labels.monthlyUnavailable}${monthlyError ? `: ${monthlyError}` : ""}`)
+          : monthly?.hasData
+            ? `${labels.unlimited} · ${monthly.complete ? "" : "~"}${labels.used} ${formatCompactBytes(trafficValue("sum", monthly.up, monthly.down))}`
+            : labels.unlimited}
       </DetailLine>
       <DetailLine label={labels.load}>
         {(record?.load.load1 ?? 0).toFixed(2)} / {(record?.load.load5 ?? 0).toFixed(2)} / {(record?.load.load15 ?? 0).toFixed(2)}
@@ -377,11 +442,17 @@ function GroupTable({
   nodes,
   liveData,
   chinese,
+  monthlyTraffic,
+  monthlyLoading,
+  monthlyError,
 }: {
   title?: string;
   nodes: NodeBasicInfo[];
   liveData: LiveData;
   chinese: boolean;
+  monthlyTraffic: Record<string, MonthlyTrafficUsage>;
+  monthlyLoading: boolean;
+  monthlyError: string | null;
 }) {
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
   const labels = chinese ? TEXT.zh : TEXT.en;
@@ -446,6 +517,9 @@ function GroupTable({
                   columns={columns}
                   isExpanded={isExpanded}
                   onToggle={() => toggle(node.uuid)}
+                  monthly={monthlyTraffic[node.uuid]}
+                  monthlyLoading={monthlyLoading}
+                  monthlyError={monthlyError}
                 />
               );
             })}
@@ -468,6 +542,9 @@ function FragmentRow({
   columns,
   isExpanded,
   onToggle,
+  monthly,
+  monthlyLoading,
+  monthlyError,
 }: {
   node: NodeBasicInfo;
   record?: LiveRecord;
@@ -480,6 +557,9 @@ function FragmentRow({
   columns: number;
   isExpanded: boolean;
   onToggle: () => void;
+  monthly?: MonthlyTrafficUsage;
+  monthlyLoading: boolean;
+  monthlyError: string | null;
 }) {
   const load = record?.load.load1 ?? 0;
   const osInfo = useMemo(() => getOSInfo(node.os), [node.os]);
@@ -547,12 +627,24 @@ function FragmentRow({
           <Expiry node={node} chinese={chinese} />
         </td>
         <td className="ss-col-traffic">
-          {record
-            ? `${formatCompactBytes(record.network.totalDown)} | ${formatCompactBytes(record.network.totalUp)}`
-            : "- | -"}
+          {monthly?.hasData
+            ? `${monthly.complete ? "" : "~"}${formatCompactBytes(monthly.down)} | ${formatCompactBytes(monthly.up)}`
+            : metadata.trafficResetDay
+              ? (monthlyLoading ? "… | …" : "- | -")
+              : record
+                ? `${formatCompactBytes(record.network.totalDown)} | ${formatCompactBytes(record.network.totalUp)}`
+                : "- | -"}
         </td>
         <td className="ss-col-usage ss-col-quota" data-mobile-label={labels.quota}>
-          <TrafficQuota node={node} record={record} online={online} chinese={chinese} />
+          <TrafficQuota
+            node={node}
+            record={record}
+            online={online}
+            chinese={chinese}
+            monthly={monthly}
+            monthlyLoading={monthlyLoading}
+            monthlyError={monthlyError}
+          />
         </td>
         <td className="ss-col-usage ss-col-cpu" data-mobile-label={labels.cpu}>
           <ProgressBar value={cpu} online={online} />
@@ -567,7 +659,15 @@ function FragmentRow({
       {isExpanded && (
         <tr className={`ss-expand-row ${index % 2 ? "is-even" : "is-odd"}`}>
           <td colSpan={columns}>
-            <NodeDetails node={node} record={record} online={online} chinese={chinese} />
+            <NodeDetails
+              node={node}
+              record={record}
+              online={online}
+              chinese={chinese}
+              monthly={monthly}
+              monthlyLoading={monthlyLoading}
+              monthlyError={monthlyError}
+            />
           </td>
         </tr>
       )}
@@ -577,6 +677,7 @@ function FragmentRow({
 
 export default function ServerTable({ nodes, liveData, grouped, chinese }: ServerTableProps) {
   const sortedNodes = useMemo(() => sortNodes(nodes), [nodes]);
+  const monthlyTraffic = useMonthlyTraffic(sortedNodes);
   const groups = useMemo(() => {
     if (!grouped) return [{ name: undefined, nodes: sortedNodes }];
     const result = new Map<string, NodeBasicInfo[]>();
@@ -598,6 +699,9 @@ export default function ServerTable({ nodes, liveData, grouped, chinese }: Serve
           nodes={group.nodes}
           liveData={liveData}
           chinese={chinese}
+          monthlyTraffic={monthlyTraffic.usage}
+          monthlyLoading={monthlyTraffic.loading}
+          monthlyError={monthlyTraffic.error}
         />
       ))}
     </div>

@@ -1,8 +1,8 @@
 {
   "name": "ServerStatus · Komari（流量与带宽）",
   "short": "ServerStatusQuota4",
-  "description": "ServerStatus compact table theme with quota cycles, expiry countdowns, advertised bandwidth caps, lifecycle badges, and stable account loading.",
-  "version": "1.0.18-quota.5",
+  "description": "ServerStatus compact table theme with billing-cycle traffic quotas, expiry countdowns, advertised bandwidth caps, lifecycle badges, and stable account loading.",
+  "version": "1.0.18-quota.6",
   "author": "tfhmc&chatgpt · customized for bismih520",
   "url": "https://github.com/lizi-learn/serverstatus-komari-quota",
   "preview": "preview.png",

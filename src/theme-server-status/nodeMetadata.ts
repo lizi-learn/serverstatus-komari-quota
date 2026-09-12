@@ -7,6 +7,7 @@ export type NodeMetadata = {
   role?: string;
   trafficResetDay?: number;
   trafficResetSource?: "confirmed" | "inferred";
+  trafficHistorySince?: string;
 };
 
 const positiveNumber = (value: string): number | undefined => {
@@ -46,6 +47,13 @@ export function parseNodeMetadata(tags: string | undefined): NodeMetadata {
       (value === "confirmed" || value === "inferred")
     ) {
       result.trafficResetSource = value;
+    }
+    if (
+      key === "traffic-history-since" &&
+      /^\d{4}-\d{2}-\d{2}$/.test(value) &&
+      !Number.isNaN(new Date(`${value}T00:00:00`).getTime())
+    ) {
+      result.trafficHistorySince = value;
     }
   }
 

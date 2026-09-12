@@ -222,7 +222,7 @@
 
 .ss-table {
   width: 100%;
-  min-width: 1210px;
+  min-width: 1310px;
   margin: 0;
   color: inherit;
   font-size: 14px;
@@ -311,6 +311,46 @@
 
 .ss-col-network {
   min-width: 122px;
+}
+
+.ss-col-cap {
+  min-width: 100px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ss-bandwidth-cap {
+  color: var(--ss-muted);
+}
+
+.ss-node-name-wrap {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.ss-node-name-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ss-lifecycle {
+  padding: 0 4px;
+  flex: 0 0 auto;
+  color: #fff;
+  font-size: 9px;
+  line-height: 16px;
+  border-radius: 3px;
+}
+
+.ss-lifecycle.is-keep {
+  background: #3c9a5f;
+}
+
+.ss-lifecycle.is-evaluate {
+  background: #9a773c;
 }
 
 .ss-col-traffic {
@@ -963,16 +1003,16 @@
   }
 
   .ss-col-name {
-    width: 15%;
+    width: 13%;
   }
 
   .ss-col-os {
-    width: 9%;
+    width: 8%;
   }
 
   .ss-col-location,
   .ss-col-uptime {
-    width: 6%;
+    width: 5.5%;
   }
 
   .ss-col-load {
@@ -980,15 +1020,19 @@
   }
 
   .ss-col-network {
-    width: 12%;
+    width: 11%;
+  }
+
+  .ss-col-cap {
+    width: 8%;
   }
 
   .ss-col-traffic {
-    width: 12%;
+    width: 11%;
   }
 
   .ss-col-usage {
-    width: 7.5%;
+    width: 7%;
   }
 
   .ss-region,
@@ -1043,7 +1087,8 @@
 
   .ss-col-os,
   .ss-col-uptime,
-  .ss-col-traffic {
+  .ss-col-traffic,
+  .ss-col-cap {
     display: none !important;
   }
 
@@ -1055,6 +1100,10 @@
   .ss-col-name {
     width: 20%;
     min-width: 0;
+  }
+
+  .ss-lifecycle {
+    display: none;
   }
 
   .ss-col-location {

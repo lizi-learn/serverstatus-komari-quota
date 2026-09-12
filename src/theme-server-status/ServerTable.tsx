@@ -12,6 +12,7 @@ import {
   percent,
   progressTone,
 } from "./format";
+import { formatMbps, parseNodeMetadata } from "./nodeMetadata";
 
 type ServerTableProps = {
   nodes: NodeBasicInfo[];
@@ -29,6 +30,7 @@ const TEXT = {
     uptime: "在线",
     load: "负载",
     speed: "网速↓|↑",
+    bandwidth: "上限↓|↑",
     traffic: "流量↓|↑",
     quota: "额度",
     unlimited: "不限流量",
@@ -46,6 +48,11 @@ const TEXT = {
     active: "活动",
     version: "版本",
     charts: "查看监控图表",
+    advertisedBandwidth: "标称带宽",
+    lifecycle: "持有策略",
+    keep: "长期持有",
+    evaluate: "待评估",
+    role: "用途",
   },
   en: {
     status: "Status",
@@ -55,6 +62,7 @@ const TEXT = {
     uptime: "Uptime",
     load: "Load",
     speed: "NetSpeed ↓|↑",
+    bandwidth: "Cap ↓|↑",
     traffic: "NetTransfer ↓|↑",
     quota: "Quota",
     unlimited: "Unlimited",
@@ -72,6 +80,11 @@ const TEXT = {
     active: "Last active",
     version: "Version",
     charts: "View monitoring charts",
+    advertisedBandwidth: "Advertised bandwidth",
+    lifecycle: "Lifecycle",
+    keep: "Long-term",
+    evaluate: "Evaluate",
+    role: "Role",
   },
 } as const;
 
@@ -202,6 +215,27 @@ function DetailLine({ label, children }: { label: string; children: ReactNode })
   );
 }
 
+function AdvertisedBandwidth({
+  node,
+  chinese,
+}: {
+  node: NodeBasicInfo;
+  chinese: boolean;
+}) {
+  const metadata = parseNodeMetadata(node.tags);
+  const down = formatMbps(metadata.bandwidthDownMbps);
+  const up = formatMbps(metadata.bandwidthUpMbps);
+  const title = chinese
+    ? `服务商标称：下载 ${down}bps / 上传 ${up}bps；不是实时测速`
+    : `Provider-advertised: download ${down}bps / upload ${up}bps; not a live test`;
+
+  return (
+    <span className="ss-bandwidth-cap" title={title} aria-label={title}>
+      {down} | {up}
+    </span>
+  );
+}
+
 function NodeDetails({
   node,
   record,
@@ -224,6 +258,7 @@ function NodeDetails({
   const trafficUsedBytes = trafficUsed(node, record);
   const trafficPercent = percent(trafficUsedBytes, trafficLimit);
   const trafficRemainingPercent = Math.max(0, 100 - trafficPercent);
+  const metadata = parseNodeMetadata(node.tags);
 
   return (
     <div className="ss-node-details">
@@ -248,6 +283,15 @@ function NodeDetails({
       <DetailLine label={labels.traffic}>
         IN {formatCompactBytes(record?.network.totalDown ?? 0)} / OUT {formatCompactBytes(record?.network.totalUp ?? 0)}
       </DetailLine>
+      <DetailLine label={labels.advertisedBandwidth}>
+        {chinese ? "下载 " : "Download "}{formatMbps(metadata.bandwidthDownMbps)}bps / {chinese ? "上传 " : "Upload "}{formatMbps(metadata.bandwidthUpMbps)}bps
+      </DetailLine>
+      {metadata.lifecycle && (
+        <DetailLine label={labels.lifecycle}>
+          {metadata.lifecycle === "keep" ? labels.keep : labels.evaluate}
+        </DetailLine>
+      )}
+      {metadata.role && <DetailLine label={labels.role}>{metadata.role}</DetailLine>}
       <DetailLine label={labels.quota}>
         {trafficLimit > 0
           ? `${labels.used} ${formatCompactBytes(trafficUsedBytes)} / ${formatCompactBytes(trafficLimit)} · ${labels.remaining} ${formatPercent(trafficRemainingPercent)}%`
@@ -288,7 +332,7 @@ function GroupTable({
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
   const labels = chinese ? TEXT.zh : TEXT.en;
   const onlineSet = useMemo(() => new Set(liveData.online), [liveData.online]);
-  const columns = 12;
+  const columns = 13;
 
   const toggle = (uuid: string) => {
     setExpanded((current) => {
@@ -315,6 +359,7 @@ function GroupTable({
               <th className="ss-col-uptime">{labels.uptime}</th>
               <th className="ss-col-load">{labels.load}</th>
               <th className="ss-col-network">{labels.speed}</th>
+              <th className="ss-col-cap">{labels.bandwidth}</th>
               <th className="ss-col-traffic">{labels.traffic}</th>
               <th className="ss-col-usage ss-col-quota">{labels.quota}</th>
               <th className="ss-col-usage">{labels.cpu}</th>
@@ -383,6 +428,7 @@ function FragmentRow({
   const load = record?.load.load1 ?? 0;
   const osInfo = useMemo(() => getOSInfo(node.os), [node.os]);
   const labels = chinese ? TEXT.zh : TEXT.en;
+  const metadata = parseNodeMetadata(node.tags);
 
   return (
     <>
@@ -401,7 +447,16 @@ function FragmentRow({
         <td className="ss-col-status">
           <span className={`ss-status-dot ${online ? "is-online" : "is-offline"}`} />
         </td>
-        <td className="ss-col-name">{node.name}</td>
+        <td className="ss-col-name">
+          <span className="ss-node-name-wrap">
+            <span className="ss-node-name-text">{node.name}</span>
+            {metadata.lifecycle && (
+              <small className={`ss-lifecycle is-${metadata.lifecycle}`}>
+                {metadata.lifecycle === "keep" ? labels.keep : labels.evaluate}
+              </small>
+            )}
+          </span>
+        </td>
         <td className="ss-col-os">
           <span className="ss-os">
             <img
@@ -425,6 +480,9 @@ function FragmentRow({
           {online
             ? `${formatCompactBytes(record?.network.down ?? 0)} | ${formatCompactBytes(record?.network.up ?? 0)}`
             : "- | -"}
+        </td>
+        <td className="ss-col-cap" data-mobile-label={labels.bandwidth}>
+          <AdvertisedBandwidth node={node} chinese={chinese} />
         </td>
         <td className="ss-col-traffic">
           {record

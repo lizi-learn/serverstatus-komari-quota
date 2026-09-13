@@ -2,7 +2,7 @@
   "name": "ServerStatus · Komari（流量与带宽）",
   "short": "ServerStatusQuota4",
   "description": "ServerStatus compact table theme with billing-cycle traffic quotas, expiry countdowns, bandwidth caps, lifecycle badges, and directional China route snapshots.",
-  "version": "1.0.18-quota.10",
+  "version": "1.0.18-quota.11",
   "author": "tfhmc&chatgpt · customized for bismih520",
   "url": "https://github.com/lizi-learn/serverstatus-komari-quota",
   "preview": "preview.png",

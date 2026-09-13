@@ -36,3 +36,19 @@ test("wide table keeps all columns and mobile keeps its compact viewport rule", 
   );
   assert.match(css, /@container ss-panel \(max-width: 760px\)/);
 });
+
+test("overflowing desktop tables expose a draggable horizontal scrollbar", () => {
+  assert.match(
+    css,
+    /\.ss-table-scroll \{[^}]*overflow-x:\s*auto;[^}]*scrollbar-width:\s*thin;/s,
+  );
+  assert.match(
+    css,
+    /\.ss-table-scroll::-webkit-scrollbar \{[^}]*height:\s*9px;/s,
+  );
+  assert.match(css, /\.ss-table-scroll::-webkit-scrollbar-thumb \{/);
+  assert.doesNotMatch(
+    css,
+    /\.ss-table-scroll::-webkit-scrollbar \{[^}]*display:\s*none;/s,
+  );
+});

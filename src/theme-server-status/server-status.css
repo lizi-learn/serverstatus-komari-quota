@@ -7,6 +7,9 @@
   --ss-rule: #ddd;
   --ss-hover: #e6e6e6;
   --ss-nav: #f9f9f9;
+  --ss-scrollbar-track: #e7e7e7;
+  --ss-scrollbar-thumb: #a8a8a8;
+  --ss-scrollbar-thumb-hover: #858585;
   --ss-content-width: min(2200px, calc(100vw - 24px));
   min-height: 100vh;
   display: flex;
@@ -214,11 +217,29 @@
 .ss-table-scroll {
   width: 100%;
   overflow-x: auto;
-  scrollbar-width: none;
+  overscroll-behavior-inline: contain;
+  scrollbar-color: var(--ss-scrollbar-thumb) var(--ss-scrollbar-track);
+  scrollbar-width: thin;
 }
 
 .ss-table-scroll::-webkit-scrollbar {
-  display: none;
+  height: 9px;
+}
+
+.ss-table-scroll::-webkit-scrollbar-track {
+  background: var(--ss-scrollbar-track);
+  border-radius: 999px;
+}
+
+.ss-table-scroll::-webkit-scrollbar-thumb {
+  min-width: 48px;
+  background: var(--ss-scrollbar-thumb);
+  border: 2px solid var(--ss-scrollbar-track);
+  border-radius: 999px;
+}
+
+.ss-table-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--ss-scrollbar-thumb-hover);
 }
 
 .ss-table {
@@ -755,6 +776,9 @@
   --ss-rule: #383b40;
   --ss-hover: #31343a;
   --ss-nav: #1c2127;
+  --ss-scrollbar-track: #20232a;
+  --ss-scrollbar-thumb: #656975;
+  --ss-scrollbar-thumb-hover: #858997;
   background-color: #31363b;
   background-image:
     radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.035) 0 0.6px, transparent 0.8px),

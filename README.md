@@ -6,7 +6,7 @@
 
 ## 功能
 
-- 首页严格遵循后台节点顺序，并支持分组/单表切换、节点详情展开、暗色模式和移动端横向表格。
+- 首页严格遵循后台节点顺序，并支持分组/单表切换、节点详情展开和暗色模式；桌面宽度不足时显示可拖动的横向滚动条，移动端继续使用紧凑列表。
 - 有 `traffic-reset-day` 的限量节点通过 Komari 的 `traffic.up` / `traffic.down` 历史指标计算当前账期用量，并按照节点设置中的统计方式（上传、下载、总和、较大值或较小值）扣减；进度条从满格开始，使用后逐渐减少。
 - 节点标签支持 `bw-down=100;bw-up=100;lifecycle=keep;role=...;traffic-reset-day=12;traffic-reset-source=inferred;traffic-history-since=2026-09-13`。桌面表格显示标称下载/上传上限、流量周期和到期倒计时，窄屏在展开详情中显示；`lifecycle` 可为 `keep` 或 `evaluate`。
 - 中国线路标签使用 `route-go-ct`、`route-go-cu`、`route-go-cm` 与对应的 `route-back-*` 分别保存三网去程和回程结论；`route-sampled-at`、`route-go-scope`、`route-back-scope` 保存采样日期和探针范围。宽屏显示紧凑的“去 / 回”矩阵，窄屏在展开详情中显示完整信息。线路是有时间和探针范围的观测值，不是服务器永久属性。
@@ -21,7 +21,7 @@
 
 ## 安装
 
-在 Komari 后台把 `traffic.up` 和 `traffic.down` 的指标保留时间设为至少 35 天，再于主题管理页面上传仓库根目录的 `ServerStatusQuota4-v1.0.18-quota.10.zip` 并应用。ZIP 根目录包含：
+在 Komari 后台把 `traffic.up` 和 `traffic.down` 的指标保留时间设为至少 35 天，再于主题管理页面上传仓库根目录的 `ServerStatusQuota4-v1.0.18-quota.11.zip` 并应用。ZIP 根目录包含：
 
 ```text
 komari-theme.json

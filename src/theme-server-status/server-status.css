@@ -7,6 +7,7 @@
   --ss-rule: #ddd;
   --ss-hover: #e6e6e6;
   --ss-nav: #f9f9f9;
+  --ss-content-width: min(2200px, calc(100vw - 24px));
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -39,8 +40,8 @@
 }
 
 .ss-navbar-inner {
-  width: 95vw;
-  max-width: 1680px;
+  width: var(--ss-content-width);
+  max-width: none;
   height: 50px;
   margin: 0 auto;
   display: flex;
@@ -175,8 +176,8 @@
 }
 
 .ss-main {
-  width: 95vw;
-  max-width: 1680px;
+  width: var(--ss-content-width);
+  max-width: none;
   min-width: 0;
   flex: 1;
   margin: 0 auto;
@@ -525,7 +526,7 @@
 }
 
 .ss-node-details {
-  max-width: calc(95vw - 42px);
+  max-width: calc(100vw - 66px);
   margin: 9px 18px 10px;
   display: flex;
   flex-direction: column;
@@ -727,8 +728,8 @@
 }
 
 .ss-footer {
-  width: 95vw;
-  max-width: 1680px;
+  width: var(--ss-content-width);
+  max-width: none;
   margin: 0 auto;
   padding: 0 0 20px;
   color: var(--ss-text);

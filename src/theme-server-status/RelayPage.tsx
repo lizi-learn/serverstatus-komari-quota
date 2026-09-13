@@ -424,8 +424,8 @@ export default function RelayPage() {
 
       <p className="ss-relay-footnote">
         {chinese
-          ? `状态阈值：CPU 或 RAM ≥ ${RESOURCE_HIGH}% 显示红色；实时上下行合计 ≥ 1 MiB/s 显示蓝色；两者同时满足显示紫色。页面自动更新，没有刷新按钮。`
-          : `Thresholds: CPU or RAM ≥ ${RESOURCE_HIGH}% is red; combined live throughput ≥ 1 MiB/s is blue; both is purple. Updates are automatic.`}
+          ? `状态阈值：CPU 或 RAM ≥ ${RESOURCE_HIGH}% 显示红色；实时上下行合计 ≥ 1 MiB/s 显示蓝色；两者同时满足显示紫色。页面自动更新，没有刷新按钮。速度与月流量是整机口径，不是每条协议独立统计；隧道流量可能同时计入物理与虚拟接口。`
+          : `Thresholds: CPU or RAM ≥ ${RESOURCE_HIGH}% is red; combined live throughput ≥ 1 MiB/s is blue; both is purple. Updates are automatic. Speed and monthly traffic are host-wide, not per protocol; tunnel traffic can appear on both physical and virtual interfaces.`}
         {" "}<Link to="/">{chinese ? "返回全部节点" : "All nodes"}</Link>
       </p>
     </div>

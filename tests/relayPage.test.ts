@@ -27,6 +27,8 @@ test("relay page uses live Komari records and contains no refresh control", () =
   assert.match(source, /record\?\.network\.up/);
   assert.doesNotMatch(source, /className="[^"]*refresh/i);
   assert.doesNotMatch(source, /onClick=\{[^}]*refresh/i);
+  assert.match(source, /整机口径/);
+  assert.match(source, /不是每条协议独立统计/);
 });
 
 test("red blue and intermittent purple load states are implemented", () => {

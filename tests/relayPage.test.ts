@@ -28,6 +28,7 @@ test("relay controls are merged into home and the old page redirects", () => {
   assert.doesNotMatch(nav, /to: "\/relays"/);
   assert.doesNotMatch(nav, /to: "\/network"/);
   assert.match(index, /<RelayStrip/);
+  assert.ok(index.indexOf("<ServerTable") < index.indexOf("<RelayStrip"));
   assert.match(routes, /path: "relays"/);
   assert.match(routes, /Navigate, \{ to: "\/#relays", replace: true \}/);
   assert.match(routes, /path: "network"[\s\S]*?Navigate, \{ to: "\/", replace: true \}/);
@@ -61,6 +62,8 @@ test("strip keeps subscription actions without duplicating node cards", () => {
   assert.match(strip, /MANAGER_URL/);
   assert.doesNotMatch(strip, /RelayCard/);
   assert.doesNotMatch(strip, /useMonthlyTraffic/);
+  assert.match(css, /\.ss-relay-strip[\s\S]*?background: transparent/);
+  assert.match(css, /\.ss-relay-strip[\s\S]*?min-height: 50px/);
 });
 
 test("relay membership comes from an explicit safe metadata tag", () => {

@@ -2,7 +2,7 @@
   "name": "ServerStatus · Komari（流量与带宽）",
   "short": "ServerStatusQuota4",
   "description": "ServerStatus compact monitoring with traffic quotas, route snapshots, and homepage relay controls with live traffic highlighting.",
-  "version": "1.0.18-quota.14",
+  "version": "1.0.18-quota.15",
   "author": "tfhmc&chatgpt · customized for bismih520",
   "url": "https://github.com/lizi-learn/serverstatus-komari-quota",
   "preview": "preview.png",

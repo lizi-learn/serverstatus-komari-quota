@@ -54,15 +54,15 @@ export default function Index() {
       )}
       {hasNodes ? (
         <>
-          <RelayStrip
-            nodes={nodeList ?? []}
-            liveData={live_data?.data ?? EMPTY_LIVE_DATA}
-            chinese={chinese}
-          />
           <ServerTable
             nodes={nodeList ?? []}
             liveData={live_data?.data ?? EMPTY_LIVE_DATA}
             grouped={grouped}
+            chinese={chinese}
+          />
+          <RelayStrip
+            nodes={nodeList ?? []}
+            liveData={live_data?.data ?? EMPTY_LIVE_DATA}
             chinese={chinese}
           />
         </>

@@ -24,6 +24,7 @@ import {
   type MonthlyTrafficUsage,
 } from "./monthlyTraffic";
 import { billingCycleRange, trafficValue } from "./trafficCycle";
+import { relayTrafficState } from "./relayTraffic";
 
 type ServerTableProps = {
   nodes: NodeBasicInfo[];
@@ -645,11 +646,18 @@ function FragmentRow({
   const osInfo = useMemo(() => getOSInfo(node.os), [node.os]);
   const labels = chinese ? TEXT.zh : TEXT.en;
   const metadata = parseNodeMetadata(node.tags);
+  const relayState = metadata.relay ? relayTrafficState(record, online) : null;
+  const relayClass = relayState === "fast"
+    ? "is-relay-fast"
+    : relayState === "active"
+      ? "is-relay-active"
+      : "";
 
   return (
     <>
       <tr
-        className={`ss-node-row ${index % 2 ? "is-even" : "is-odd"}`}
+        className={`ss-node-row ${index % 2 ? "is-even" : "is-odd"} ${relayClass}`.trim()}
+        data-relay-traffic={relayState ?? undefined}
         aria-expanded={isExpanded}
         tabIndex={0}
         onClick={onToggle}
@@ -668,7 +676,7 @@ function FragmentRow({
             <span className="ss-node-name-text">{node.name}</span>
             {metadata.lifecycle && (
               <small className={`ss-lifecycle is-${metadata.lifecycle}`}>
-                {metadata.lifecycle === "keep" ? labels.keep : labels.evaluate}
+                {metadata.role || (metadata.lifecycle === "keep" ? labels.keep : labels.evaluate)}
               </small>
             )}
           </span>

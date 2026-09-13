@@ -4,10 +4,19 @@ import path from "node:path";
 import test from "node:test";
 
 const root = path.resolve(import.meta.dirname, "..");
-const source = fs.readFileSync(
-  path.join(root, "src/theme-server-status/RelayPage.tsx"),
+const strip = fs.readFileSync(
+  path.join(root, "src/theme-server-status/RelayStrip.tsx"),
   "utf8",
 );
+const table = fs.readFileSync(
+  path.join(root, "src/theme-server-status/ServerTable.tsx"),
+  "utf8",
+);
+const traffic = fs.readFileSync(
+  path.join(root, "src/theme-server-status/relayTraffic.ts"),
+  "utf8",
+);
+const index = fs.readFileSync(path.join(root, "src/pages/Index.tsx"), "utf8");
 const css = fs.readFileSync(
   path.join(root, "src/theme-server-status/server-status.css"),
   "utf8",
@@ -15,43 +24,47 @@ const css = fs.readFileSync(
 const nav = fs.readFileSync(path.join(root, "src/components/NavBar.tsx"), "utf8");
 const routes = fs.readFileSync(path.join(root, "src/routes.ts"), "utf8");
 
-test("relay page is integrated into the Komari navigation", () => {
-  assert.match(nav, /to: "\/relays"/);
+test("relay controls are merged into home and the old page redirects", () => {
+  assert.doesNotMatch(nav, /to: "\/relays"/);
+  assert.doesNotMatch(nav, /to: "\/network"/);
+  assert.match(index, /<RelayStrip/);
   assert.match(routes, /path: "relays"/);
-  assert.match(routes, /theme-server-status\/RelayPage/);
+  assert.match(routes, /Navigate, \{ to: "\/#relays", replace: true \}/);
+  assert.match(routes, /path: "network"[\s\S]*?Navigate, \{ to: "\/", replace: true \}/);
+  assert.doesNotMatch(routes, /theme-server-status\/RelayPage/);
+  assert.doesNotMatch(routes, /theme-server-status\/NetworkStatusPage/);
 });
 
-test("relay page uses live Komari records and contains no refresh control", () => {
-  assert.match(source, /useLiveData\(\)/);
-  assert.match(source, /record\?\.network\.down/);
-  assert.match(source, /record\?\.network\.up/);
-  assert.doesNotMatch(source, /className="[^"]*refresh/i);
-  assert.doesNotMatch(source, /onClick=\{[^}]*refresh/i);
-  assert.match(source, /整机口径/);
-  assert.match(source, /不是每条协议独立统计/);
+test("home strip uses live network data and contains no refresh control", () => {
+  assert.match(strip, /record\?\.network\.down/);
+  assert.match(strip, /record\?\.network\.up/);
+  assert.doesNotMatch(strip, /\bcpu\b/i);
+  assert.doesNotMatch(strip, /\bram\b/i);
+  assert.doesNotMatch(strip, /refresh/i);
+  assert.match(strip, /整机正在传输/);
 });
 
-test("red blue and intermittent purple load states are implemented", () => {
-  assert.match(source, /RESOURCE_HIGH = 75/);
-  assert.match(source, /FAST_RATE = 1024 \* 1024/);
-  for (const state of ["network", "resource", "combined"]) {
-    assert.match(source, new RegExp(`return "${state}"`));
-    assert.match(css, new RegExp(`\\.ss-relay-card\\.is-${state}`));
-  }
-  assert.match(css, /@keyframes ssRelayBlue/);
-  assert.match(css, /@keyframes ssRelayRed/);
-  assert.match(css, /@keyframes ssRelayPurple/);
+test("relay rows use only network-driven blue states", () => {
+  assert.match(traffic, /RELAY_ACTIVE_RATE = 128 \* 1024/);
+  assert.match(traffic, /RELAY_FAST_RATE = 1024 \* 1024/);
+  assert.doesNotMatch(traffic, /cpu|ram|memory|resource/i);
+  assert.match(table, /is-relay-active/);
+  assert.match(table, /is-relay-fast/);
+  assert.match(css, /\.ss-node-row\.is-relay-active/);
+  assert.match(css, /\.ss-node-row\.is-relay-fast/);
+  assert.match(css, /@keyframes ssRelayRowBlue/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
 });
 
-test("cards and compact expandable list modes remain available", () => {
-  assert.match(source, /type ViewMode = "cards" \| "list"/);
-  assert.match(source, /aria-expanded=\{expanded\}/);
-  assert.match(css, /\.ss-relay-grid\.is-list/);
-  assert.match(css, /\.ss-relay-card\.is-compact/);
+test("strip keeps subscription actions without duplicating node cards", () => {
+  assert.match(strip, /copySubscription/);
+  assert.match(strip, /MANAGER_URL/);
+  assert.doesNotMatch(strip, /RelayCard/);
+  assert.doesNotMatch(strip, /useMonthlyTraffic/);
 });
 
 test("relay membership comes from an explicit safe metadata tag", () => {
-  assert.match(source, /parseNodeMetadata\(node\.tags\)\.relay/);
-  assert.doesNotMatch(source, /\b(?:\d{1,3}\.){3}\d{1,3}\b/);
+  assert.match(strip, /parseNodeMetadata\(node\.tags\)\.relay/);
+  assert.match(table, /metadata\.relay \? relayTrafficState/);
+  assert.doesNotMatch(strip, /\b(?:\d{1,3}\.){3}\d{1,3}\b/);
 });

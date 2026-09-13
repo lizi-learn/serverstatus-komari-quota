@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import Loading from "@/components/loading";
 import { useLiveData } from "@/contexts/LiveDataContext";
 import { useNodeList } from "@/contexts/NodeListContext";
+import RelayStrip from "@/theme-server-status/RelayStrip";
 import ServerTable from "@/theme-server-status/ServerTable";
 import { useServerStatusSettings } from "@/theme-server-status/SettingsContext";
 
@@ -52,12 +53,19 @@ export default function Index() {
         </div>
       )}
       {hasNodes ? (
-        <ServerTable
-          nodes={nodeList ?? []}
-          liveData={live_data?.data ?? EMPTY_LIVE_DATA}
-          grouped={grouped}
-          chinese={chinese}
-        />
+        <>
+          <RelayStrip
+            nodes={nodeList ?? []}
+            liveData={live_data?.data ?? EMPTY_LIVE_DATA}
+            chinese={chinese}
+          />
+          <ServerTable
+            nodes={nodeList ?? []}
+            liveData={live_data?.data ?? EMPTY_LIVE_DATA}
+            grouped={grouped}
+            chinese={chinese}
+          />
+        </>
       ) : pageError ? (
         <section className="ss-panel ss-empty" role="alert">
           <span>{pageError}</span>

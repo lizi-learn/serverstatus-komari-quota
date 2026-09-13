@@ -307,6 +307,31 @@
   background: var(--ss-hover);
 }
 
+.ss-node-row.is-relay-active > td {
+  background:
+    linear-gradient(90deg, rgba(52, 190, 255, 0.11), rgba(71, 211, 255, 0.025) 60%),
+    var(--ss-panel);
+  box-shadow: inset 0 1px rgba(72, 201, 255, 0.28), inset 0 -1px rgba(72, 201, 255, 0.2);
+}
+
+.ss-node-row.is-relay-fast > td {
+  background:
+    linear-gradient(90deg, rgba(34, 176, 255, 0.2), rgba(76, 219, 255, 0.05) 62%),
+    var(--ss-panel);
+  animation: ssRelayRowBlue 1.55s ease-in-out infinite;
+}
+
+.ss-node-row.is-relay-active > td:first-child,
+.ss-node-row.is-relay-fast > td:first-child {
+  box-shadow: inset 3px 0 #32c5ff, inset 0 1px rgba(72, 201, 255, 0.3), inset 0 -1px rgba(72, 201, 255, 0.2);
+}
+
+@keyframes ssRelayRowBlue {
+  50% {
+    box-shadow: inset 0 1px rgba(75, 216, 255, 0.72), inset 0 -1px rgba(75, 216, 255, 0.58), 0 0 15px rgba(31, 177, 255, 0.2);
+  }
+}
+
 .ss-col-status {
   width: 58px;
   min-width: 58px;
@@ -607,6 +632,168 @@
   border: 1px solid currentColor;
   border-radius: 3px;
   cursor: pointer;
+}
+
+.ss-relay-strip {
+  --relay-blue: #3bd4ff;
+  position: relative;
+  overflow: hidden;
+  min-height: 78px;
+  margin: 0 0 14px;
+  padding: 13px 15px;
+  display: grid;
+  grid-template-columns: minmax(230px, 1.05fr) minmax(330px, 1.35fr) auto;
+  align-items: center;
+  gap: 15px;
+  color: #eaf7ff;
+  background:
+    radial-gradient(circle at 8% 10%, rgba(57, 213, 255, 0.2), transparent 35%),
+    linear-gradient(120deg, #06111e, #0a1d31 58%, #0b182a);
+  border: 1px solid rgba(87, 184, 235, 0.34);
+  border-radius: 12px;
+  box-shadow: 0 10px 32px rgba(1, 14, 30, 0.18);
+}
+
+.ss-relay-strip::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.18;
+  background-image:
+    linear-gradient(rgba(83, 184, 231, 0.18) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(83, 184, 231, 0.18) 1px, transparent 1px);
+  background-size: 24px 24px;
+  mask-image: linear-gradient(90deg, #000, transparent 72%);
+  pointer-events: none;
+}
+
+.ss-relay-strip > * {
+  position: relative;
+  z-index: 1;
+}
+
+.ss-relay-strip.is-active {
+  border-color: rgba(59, 212, 255, 0.55);
+  box-shadow: 0 12px 38px rgba(6, 97, 128, 0.22), 0 0 22px rgba(59, 212, 255, 0.12);
+}
+
+.ss-relay-strip.is-fast {
+  border-color: rgba(59, 212, 255, 0.88);
+  animation: ssRelayStripBlue 1.55s ease-in-out infinite;
+}
+
+.ss-relay-strip__identity,
+.ss-relay-strip__stats,
+.ss-relay-strip__actions {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.ss-relay-strip__identity {
+  gap: 10px;
+}
+
+.ss-relay-strip__identity > span:last-child {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ss-relay-strip__identity strong {
+  color: #fff;
+  font-size: 15px;
+}
+
+.ss-relay-strip__identity small,
+.ss-relay-strip__stats small {
+  color: #8da7bd;
+  font-size: 10px;
+}
+
+.ss-relay-strip__icon {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  display: grid;
+  place-items: center;
+  color: var(--relay-blue);
+  background: rgba(24, 112, 149, 0.23);
+  border: 1px solid rgba(78, 209, 255, 0.28);
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(59, 212, 255, 0.13);
+}
+
+.ss-relay-strip__icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.ss-relay-strip__stats {
+  justify-content: center;
+  gap: 8px;
+}
+
+.ss-relay-strip__stats > span {
+  min-width: 92px;
+  padding: 7px 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: rgba(3, 13, 24, 0.55);
+  border: 1px solid rgba(91, 141, 180, 0.18);
+  border-radius: 8px;
+}
+
+.ss-relay-strip__stats b {
+  overflow: hidden;
+  color: #fff;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ss-relay-strip__actions {
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.ss-relay-strip__actions button,
+.ss-relay-strip__actions a {
+  min-height: 35px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #dff8ff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  background: rgba(8, 28, 47, 0.78);
+  border: 1px solid rgba(98, 210, 255, 0.36);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.ss-relay-strip__actions button:hover,
+.ss-relay-strip__actions a:hover {
+  border-color: rgba(112, 225, 255, 0.82);
+  background: rgba(18, 53, 78, 0.92);
+}
+
+.ss-relay-strip__actions svg {
+  width: 15px;
+  height: 15px;
+}
+
+@keyframes ssRelayStripBlue {
+  50% {
+    box-shadow: 0 14px 45px rgba(5, 111, 159, 0.32), 0 0 36px rgba(59, 212, 255, 0.3);
+  }
 }
 
 .ss-relay-page {
@@ -1869,6 +2056,39 @@
 }
 
 @media (max-width: 767px) {
+  .ss-relay-strip {
+    padding: 12px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+  }
+
+  .ss-relay-strip__identity {
+    grid-column: 1 / -1;
+  }
+
+  .ss-relay-strip__stats {
+    justify-content: flex-start;
+  }
+
+  .ss-relay-strip__stats > span {
+    min-width: 0;
+    padding: 6px 8px;
+  }
+
+  .ss-relay-strip__stats > span:nth-child(2) {
+    display: none;
+  }
+
+  .ss-relay-strip__actions {
+    align-self: stretch;
+  }
+
+  .ss-relay-strip__actions button,
+  .ss-relay-strip__actions a {
+    min-width: 35px;
+    padding: 0 9px;
+  }
+
   .ss-relay-page {
     font-size: 12px;
   }
@@ -1951,6 +2171,11 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .ss-relay-strip,
+  .ss-node-row.is-relay-fast > td {
+    animation: none !important;
+  }
+
   .ss-relay-card,
   .ss-relay-scan,
   .ss-relay-wave i {

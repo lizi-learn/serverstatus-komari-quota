@@ -15,15 +15,11 @@ export const routes: RouteObject[] = [
       { index: true, element: React.createElement(Index) },
       {
         path: "relays",
-        element: React.createElement(
-          lazy(() => import("./theme-server-status/RelayPage")),
-        ),
+        element: React.createElement(Navigate, { to: "/#relays", replace: true }),
       },
       {
         path: "network",
-        element: React.createElement(
-          lazy(() => import("./theme-server-status/NetworkStatusPage")),
-        ),
+        element: React.createElement(Navigate, { to: "/", replace: true }),
       },
       {
         path: "instance/:uuid",

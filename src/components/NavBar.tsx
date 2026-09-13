@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Home, LogIn, Menu, Network, RadioTower, Settings, UserRound, X } from "lucide-react";
+import { Home, LogIn, Menu, Settings, UserRound, X } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { AccountProvider, useAccount } from "@/contexts/AccountContext";
@@ -16,8 +16,6 @@ function Navigation() {
   const chinese = i18n.resolvedLanguage?.toLowerCase().startsWith("zh") ?? false;
   const navItems = [
     { to: "/", label: chinese ? "首页" : "Home", icon: Home },
-    { to: "/relays", label: chinese ? "中转" : "Relays", icon: RadioTower },
-    { to: "/network", label: chinese ? "网络" : "Network", icon: Network },
   ];
 
   useEffect(() => {

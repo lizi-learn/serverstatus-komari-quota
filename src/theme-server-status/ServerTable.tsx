@@ -16,6 +16,7 @@ import {
   daysUntil,
   formatDateOnly,
   formatMbps,
+  formatRouteValue,
   parseNodeMetadata,
 } from "./nodeMetadata";
 import {
@@ -41,6 +42,7 @@ const TEXT = {
     load: "负载",
     speed: "网速↓|↑",
     bandwidth: "上限↓|↑",
+    routes: "线路 去|回",
     cycle: "流量周期",
     expiry: "到期",
     traffic: "本期↓|↑",
@@ -72,6 +74,8 @@ const TEXT = {
     partialCycle: "本周期数据不完整",
     monthlyUnavailable: "月度用量暂不可用",
     recordedSince: "记录始于",
+    routeEvidence: "中国线路",
+    routeSample: "线路采样",
     bootTraffic: "自开机流量",
     daysLeft: "天",
     expired: "已到期",
@@ -85,6 +89,7 @@ const TEXT = {
     load: "Load",
     speed: "NetSpeed ↓|↑",
     bandwidth: "Cap ↓|↑",
+    routes: "Routes go|back",
     cycle: "Traffic cycle",
     expiry: "Expires",
     traffic: "Cycle ↓|↑",
@@ -116,6 +121,8 @@ const TEXT = {
     partialCycle: "Partial current cycle",
     monthlyUnavailable: "Monthly usage unavailable",
     recordedSince: "Recorded since",
+    routeEvidence: "China routes",
+    routeSample: "Route sample",
     bootTraffic: "Since boot",
     daysLeft: "d",
     expired: "Expired",
@@ -324,6 +331,58 @@ function TrafficCycle({ node, chinese }: { node: NodeBasicInfo; chinese: boolean
   return <span title={title}>{text}</span>;
 }
 
+const ROUTE_CARRIERS = [
+  { key: "ct", zh: "电", en: "CT" },
+  { key: "cu", zh: "联", en: "CU" },
+  { key: "cm", zh: "移", en: "CM" },
+] as const;
+
+function ChinaRoutes({
+  node,
+  chinese,
+  detailed = false,
+}: {
+  node: NodeBasicInfo;
+  chinese: boolean;
+  detailed?: boolean;
+}) {
+  const routes = parseNodeMetadata(node.tags).chinaRoutes;
+  if (!routes) return <span>-</span>;
+
+  const sample = [
+    routes.sampledAt,
+    routes.goScope && `${chinese ? "去程" : "go"}: ${routes.goScope}`,
+    routes.backScope && `${chinese ? "回程" : "back"}: ${routes.backScope}`,
+  ].filter(Boolean).join(" · ");
+
+  if (detailed) {
+    return (
+      <span className="ss-route-details" title={sample || undefined}>
+        {ROUTE_CARRIERS.map((carrier) => (
+          <span key={carrier.key}>
+            <b>{chinese ? carrier.zh : carrier.en}</b>{" "}
+            {chinese ? "去" : "go"}{" "}
+            {formatRouteValue(routes.go[carrier.key], chinese)} ·{" "}
+            {chinese ? "回" : "back"}{" "}
+            {formatRouteValue(routes.back[carrier.key], chinese)}
+          </span>
+        ))}
+      </span>
+    );
+  }
+
+  return (
+    <span className="ss-route-compact" title={sample || undefined} aria-label={sample || undefined}>
+      {ROUTE_CARRIERS.map((carrier) => (
+        <span key={carrier.key}>
+          <b>{chinese ? carrier.zh : carrier.en}</b>{" "}
+          {formatRouteValue(routes.go[carrier.key], chinese)} / {formatRouteValue(routes.back[carrier.key], chinese)}
+        </span>
+      ))}
+    </span>
+  );
+}
+
 function Expiry({ node, chinese }: { node: NodeBasicInfo; chinese: boolean }) {
   const labels = chinese ? TEXT.zh : TEXT.en;
   const remaining = daysUntil(node.expired_at);
@@ -413,6 +472,20 @@ function NodeDetails({
         </DetailLine>
       )}
       {metadata.role && <DetailLine label={labels.role}>{metadata.role}</DetailLine>}
+      {metadata.chinaRoutes && (
+        <>
+          <DetailLine label={labels.routeEvidence}>
+            <ChinaRoutes node={node} chinese={chinese} detailed />
+          </DetailLine>
+          <DetailLine label={labels.routeSample}>
+            {metadata.chinaRoutes.sampledAt || "-"}
+            {metadata.chinaRoutes.goScope &&
+              ` · ${chinese ? "去程" : "go"}: ${metadata.chinaRoutes.goScope}`}
+            {metadata.chinaRoutes.backScope &&
+              ` · ${chinese ? "回程" : "back"}: ${metadata.chinaRoutes.backScope}`}
+          </DetailLine>
+        </>
+      )}
       <DetailLine label={labels.quota}>
         {trafficLimit > 0 && trafficUsedBytes !== undefined
           ? `${monthly && !monthly.complete ? "~" : ""}${labels.used} ${formatCompactBytes(trafficUsedBytes)} / ${formatCompactBytes(trafficLimit)} · ${labels.remaining} ${formatPercent(trafficRemainingPercent)}%${monthly && !monthly.complete ? ` · ${labels.partialCycle}${monthly.historySince ? `，${labels.recordedSince} ${monthly.historySince}` : ""}` : ""}`
@@ -463,7 +536,7 @@ function GroupTable({
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
   const labels = chinese ? TEXT.zh : TEXT.en;
   const onlineSet = useMemo(() => new Set(liveData.online), [liveData.online]);
-  const columns = 15;
+  const columns = 16;
 
   const toggle = (uuid: string) => {
     setExpanded((current) => {
@@ -487,6 +560,7 @@ function GroupTable({
               <th className="ss-col-name">{labels.name}</th>
               <th className="ss-col-os">{labels.platform}</th>
               <th className="ss-col-location">{labels.location}</th>
+              <th className="ss-col-route">{labels.routes}</th>
               <th className="ss-col-uptime">{labels.uptime}</th>
               <th className="ss-col-load">{labels.load}</th>
               <th className="ss-col-network">{labels.speed}</th>
@@ -612,6 +686,9 @@ function FragmentRow({
           </span>
         </td>
         <td className="ss-col-location"><Region value={node.region} online={online} /></td>
+        <td className="ss-col-route" data-mobile-label={labels.routes}>
+          <ChinaRoutes node={node} chinese={chinese} />
+        </td>
         <td className="ss-col-uptime">
           {online ? formatUptime(record?.uptime ?? 0, chinese) : "-"}
         </td>

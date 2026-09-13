@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   formatMbps,
+  formatRouteValue,
   formatDateOnly,
   daysUntil,
   isFleetVisible,
@@ -66,4 +67,38 @@ test("formats expiry dates and remaining days deterministically", () => {
     2,
   );
   assert.equal(daysUntil("not-a-date"), undefined);
+});
+
+test("parses directional China route metadata by carrier", () => {
+  assert.deepEqual(
+    parseNodeMetadata(
+      "route-go-ct=CN2;route-back-ct=CN2 GIA;route-go-cu=4837;" +
+      "route-back-cu=9929/4837;route-go-cm=CMIN2;route-back-cm=CMIN2;" +
+      "route-sampled-at=2026-09-13;route-go-scope=广州电信/桂林联通/台山移动;" +
+      "route-back-scope=北京/上海/广州/成都",
+    ).chinaRoutes,
+    {
+      go: { ct: "CN2", cu: "4837", cm: "CMIN2" },
+      back: { ct: "CN2 GIA", cu: "9929/4837", cm: "CMIN2" },
+      sampledAt: "2026-09-13",
+      goScope: "广州电信/桂林联通/台山移动",
+      backScope: "北京/上海/广州/成都",
+    },
+  );
+});
+
+test("rejects malformed or oversized China route metadata", () => {
+  assert.equal(
+    parseNodeMetadata(
+      `route-go-ct=${"x".repeat(41)};route-go-xx=CN2;route-sampled-at=2026/09/13`,
+    ).chinaRoutes,
+    undefined,
+  );
+});
+
+test("formats canonical route evidence labels", () => {
+  assert.equal(formatRouteValue("HIDDEN", true), "部分隐藏");
+  assert.equal(formatRouteValue("CN2-163", true), "CN2/163动态");
+  assert.equal(formatRouteValue("9929-163", false), "9929→163");
+  assert.equal(formatRouteValue(undefined, false), "untested");
 });

@@ -1,5 +1,15 @@
 export type Lifecycle = "keep" | "evaluate";
 
+export type ChinaCarrier = "ct" | "cu" | "cm";
+
+export type ChinaRouteMetadata = {
+  go: Partial<Record<ChinaCarrier, string>>;
+  back: Partial<Record<ChinaCarrier, string>>;
+  sampledAt?: string;
+  goScope?: string;
+  backScope?: string;
+};
+
 export type NodeMetadata = {
   bandwidthDownMbps?: number;
   bandwidthUpMbps?: number;
@@ -8,7 +18,12 @@ export type NodeMetadata = {
   trafficResetDay?: number;
   trafficResetSource?: "confirmed" | "inferred";
   trafficHistorySince?: string;
+  chinaRoutes?: ChinaRouteMetadata;
 };
+
+const ROUTE_TAG_PATTERN = /^route-(go|back)-(ct|cu|cm)$/;
+const ROUTE_VALUE_MAX_LENGTH = 40;
+const ROUTE_SCOPE_MAX_LENGTH = 80;
 
 const positiveNumber = (value: string): number | undefined => {
   const parsed = Number(value);
@@ -17,6 +32,8 @@ const positiveNumber = (value: string): number | undefined => {
 
 export function parseNodeMetadata(tags: string | undefined): NodeMetadata {
   const result: NodeMetadata = {};
+  const chinaRoutes: ChinaRouteMetadata = { go: {}, back: {} };
+  let hasChinaRoutes = false;
 
   for (const rawTag of (tags ?? "").split(";")) {
     const separator = rawTag.indexOf("=");
@@ -55,9 +72,63 @@ export function parseNodeMetadata(tags: string | undefined): NodeMetadata {
     ) {
       result.trafficHistorySince = value;
     }
+
+    const routeMatch = key.match(ROUTE_TAG_PATTERN);
+    if (
+      routeMatch &&
+      value.length > 0 &&
+      value.length <= ROUTE_VALUE_MAX_LENGTH
+    ) {
+      const direction = routeMatch[1] as "go" | "back";
+      const carrier = routeMatch[2] as ChinaCarrier;
+      chinaRoutes[direction][carrier] = value;
+      hasChinaRoutes = true;
+    }
+    if (
+      key === "route-sampled-at" &&
+      /^\d{4}-\d{2}-\d{2}$/.test(value) &&
+      !Number.isNaN(new Date(`${value}T00:00:00`).getTime())
+    ) {
+      chinaRoutes.sampledAt = value;
+      hasChinaRoutes = true;
+    }
+    if (
+      key === "route-go-scope" &&
+      value.length > 0 &&
+      value.length <= ROUTE_SCOPE_MAX_LENGTH
+    ) {
+      chinaRoutes.goScope = value;
+      hasChinaRoutes = true;
+    }
+    if (
+      key === "route-back-scope" &&
+      value.length > 0 &&
+      value.length <= ROUTE_SCOPE_MAX_LENGTH
+    ) {
+      chinaRoutes.backScope = value;
+      hasChinaRoutes = true;
+    }
   }
 
+  if (hasChinaRoutes) result.chinaRoutes = chinaRoutes;
+
   return result;
+}
+
+export function formatRouteValue(
+  value: string | undefined,
+  chinese: boolean,
+): string {
+  if (!value) return chinese ? "未测" : "untested";
+  const labels: Record<string, readonly [string, string]> = {
+    HIDDEN: ["部分隐藏", "partly hidden"],
+    "CN2-163": ["CN2/163动态", "CN2/163 dynamic"],
+    "CTG-CN2-163": ["CTG/CN2→163", "CTG/CN2→163"],
+    "9929-163": ["9929→163", "9929→163"],
+    "9929-CMNET": ["9929→CMNET", "9929→CMNET"],
+  };
+  const translated = labels[value.toUpperCase()];
+  return translated ? translated[chinese ? 0 : 1] : value;
 }
 
 export function formatMbps(value: number | undefined): string {

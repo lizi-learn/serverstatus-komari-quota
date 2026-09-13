@@ -12,11 +12,12 @@ import {
 
 test("parses structured node metadata without depending on tag order", () => {
   assert.deepEqual(
-    parseNodeMetadata("vpn; lifecycle=keep ; bw-up=100 ;role=dmca-resistant; bw-down=100;traffic-reset-day=12;traffic-reset-source=inferred;traffic-history-since=2026-09-13"),
+    parseNodeMetadata("vpn; lifecycle=keep ; relay=sing-box; bw-up=100 ;role=dmca-resistant; bw-down=100;traffic-reset-day=12;traffic-reset-source=inferred;traffic-history-since=2026-09-13"),
     {
       bandwidthDownMbps: 100,
       bandwidthUpMbps: 100,
       lifecycle: "keep",
+      relay: true,
       role: "dmca-resistant",
       trafficResetDay: 12,
       trafficResetSource: "inferred",
@@ -30,6 +31,12 @@ test("ignores invalid bandwidth and lifecycle values", () => {
     parseNodeMetadata("bw-down=0;bw-up=-5;lifecycle=forever;plain-tag"),
     {},
   );
+});
+
+test("recognizes only explicit relay tags", () => {
+  assert.equal(parseNodeMetadata("relay=true").relay, true);
+  assert.equal(parseNodeMetadata("relay=yes").relay, true);
+  assert.equal(parseNodeMetadata("relay=no").relay, undefined);
 });
 
 test("formats exact advertised Mbps values compactly", () => {

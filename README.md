@@ -14,6 +14,7 @@
 - `traffic-history-since` 表示可靠历史数据开始积累的日期。如果当前账期早于这个日期，额度显示 `~` 并注明本周期数据不完整；跨过下一个账单日后自动转为完整统计。日期为 29–31 日时，短月份按该月最后一天处理。
 - Komari 后台标为“隐藏”的节点在本主题首页始终不渲染，即使浏览器同时登录了管理员；后台监控数据与历史仍会保留。
 - `/network` 提供节点搜索、切换和 24 小时延迟图。
+- `/relays` 在同一站点内提供中转订阅、复制按钮、卡片/列表切换和秒级实时状态；CPU 或内存高负载闪红，高速传输闪蓝，两者同时出现时紫色间歇闪烁，并遵循系统的“减少动态效果”设置。
 - 左上角读取 Komari 后台上传的 `/favicon.ico`。
 - 保留 Komari 原生 `/admin`、`/terminal`、登录和节点详情能力。
 
@@ -21,7 +22,7 @@
 
 ## 安装
 
-在 Komari 后台把 `traffic.up` 和 `traffic.down` 的指标保留时间设为至少 35 天，再于主题管理页面上传仓库根目录的 `ServerStatusQuota4-v1.0.18-quota.11.zip` 并应用。ZIP 根目录包含：
+在 Komari 后台把 `traffic.up` 和 `traffic.down` 的指标保留时间设为至少 35 天，再于主题管理页面上传仓库根目录的 `ServerStatusQuota4-v1.0.18-quota.12.zip` 并应用。要在中转页显示节点，为节点标签增加 `relay=sing-box`。ZIP 根目录包含：
 
 ```text
 komari-theme.json

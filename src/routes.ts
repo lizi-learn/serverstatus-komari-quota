@@ -14,6 +14,12 @@ export const routes: RouteObject[] = [
     children: [
       { index: true, element: React.createElement(Index) },
       {
+        path: "relays",
+        element: React.createElement(
+          lazy(() => import("./theme-server-status/RelayPage")),
+        ),
+      },
+      {
         path: "network",
         element: React.createElement(
           lazy(() => import("./theme-server-status/NetworkStatusPage")),

@@ -14,6 +14,7 @@ export type NodeMetadata = {
   bandwidthDownMbps?: number;
   bandwidthUpMbps?: number;
   lifecycle?: Lifecycle;
+  relay?: boolean;
   role?: string;
   trafficResetDay?: number;
   trafficResetSource?: "confirmed" | "inferred";
@@ -51,6 +52,12 @@ export function parseNodeMetadata(tags: string | undefined): NodeMetadata {
     }
     if (key === "lifecycle" && (value === "keep" || value === "evaluate")) {
       result.lifecycle = value;
+    }
+    if (
+      key === "relay" &&
+      ["1", "true", "yes", "sing-box", "singbox"].includes(value.toLowerCase())
+    ) {
+      result.relay = true;
     }
     if (key === "role" && value) result.role = value;
     if (key === "traffic-reset-day") {

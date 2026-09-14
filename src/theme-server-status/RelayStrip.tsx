@@ -29,7 +29,8 @@ export default function RelayStrip({ nodes, liveData, chinese }: RelayStripProps
   const stats = useMemo(() => {
     let onlineCount = 0;
     let activeCount = 0;
-    let totalRate = 0;
+    let totalDownRate = 0;
+    let totalUpRate = 0;
     let fastestState: "idle" | "active" | "fast" = "idle";
 
     for (const node of relayNodes) {
@@ -40,10 +41,11 @@ export default function RelayStrip({ nodes, liveData, chinese }: RelayStripProps
       if (state === "active" || state === "fast") activeCount += 1;
       if (state === "fast") fastestState = "fast";
       else if (state === "active" && fastestState === "idle") fastestState = "active";
-      totalRate += (record?.network.down ?? 0) + (record?.network.up ?? 0);
+      totalDownRate += record?.network.down ?? 0;
+      totalUpRate += record?.network.up ?? 0;
     }
 
-    return { activeCount, fastestState, onlineCount, totalRate };
+    return { activeCount, fastestState, onlineCount, totalDownRate, totalUpRate };
   }, [liveData.data, online, relayNodes]);
 
   if (!relayNodes.length) return null;
@@ -86,8 +88,12 @@ export default function RelayStrip({ nodes, liveData, chinese }: RelayStripProps
           <b>{stats.activeCount}</b>
         </span>
         <span>
-          <small>{chinese ? "实时总速率" : "Live total"}</small>
-          <b>{speed(stats.totalRate)}</b>
+          <small>{chinese ? "实时下载" : "Live down"}</small>
+          <b>↓ {speed(stats.totalDownRate)}</b>
+        </span>
+        <span>
+          <small>{chinese ? "实时上传" : "Live up"}</small>
+          <b>↑ {speed(stats.totalUpRate)}</b>
         </span>
       </div>
 

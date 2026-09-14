@@ -29,7 +29,7 @@ test("desktop status layout uses nearly the full viewport", () => {
 });
 
 test("wide table keeps all columns and mobile keeps its compact viewport rule", () => {
-  assert.match(css, /\.ss-table \{[^}]*min-width:\s*1760px;/s);
+  assert.match(css, /\.ss-table \{[^}]*min-width:\s*1690px;/s);
   assert.match(
     css,
     /@media \(max-width: 767px\)[\s\S]*?\.ss-main \{[^}]*width:\s*100%;[^}]*max-width:\s*none;/,

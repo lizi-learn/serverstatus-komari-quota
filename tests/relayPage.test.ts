@@ -39,10 +39,28 @@ test("relay controls are merged into home and the old page redirects", () => {
 test("home strip uses live network data and contains no refresh control", () => {
   assert.match(strip, /record\?\.network\.down/);
   assert.match(strip, /record\?\.network\.up/);
+  assert.match(strip, /totalDownRate/);
+  assert.match(strip, /totalUpRate/);
+  assert.match(strip, /实时下载/);
+  assert.match(strip, /实时上传/);
+  assert.doesNotMatch(strip, /实时总速率/);
   assert.doesNotMatch(strip, /\bcpu\b/i);
   assert.doesNotMatch(strip, /\bram\b/i);
   assert.doesNotMatch(strip, /refresh/i);
   assert.match(strip, /整机正在传输/);
+});
+
+test("home table hides load while expanded details retain it", () => {
+  assert.doesNotMatch(table, /<th className="ss-col-load"/);
+  assert.doesNotMatch(table, /<td className="ss-col-load/);
+  assert.match(table, /<DetailLine label=\{labels\.load\}>/);
+  assert.match(table, /const columns = 15/);
+});
+
+test("quota bar shows the configured cap without approximation prefixes", () => {
+  assert.match(table, /formatPercent\(remainingPercent\).*formatCompactBytes\(limit\)/s);
+  assert.doesNotMatch(table, /label=\{`\$\{partial \? "~"/);
+  assert.doesNotMatch(table, /`∞ · \$\{partial \? "~"/);
 });
 
 test("relay rows use only network-driven blue states", () => {

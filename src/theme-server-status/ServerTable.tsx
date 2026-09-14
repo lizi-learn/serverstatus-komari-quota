@@ -232,7 +232,7 @@ function TrafficQuota({
       : labels.unlimited;
     const label = cycleTotal === undefined
       ? `∞${monthlyLoading ? " · …" : ""}`
-      : `∞ · ${partial ? "~" : ""}${formatCompactBytes(cycleTotal)}`;
+      : `∞ · ${formatCompactBytes(cycleTotal)}`;
     return (
       <span className="ss-quota-progress" title={detail} aria-label={detail}>
         <ProgressBar value={100} toneValue={0} online={online} label={label} />
@@ -272,7 +272,7 @@ function TrafficQuota({
         value={remainingPercent}
         toneValue={usedPercent}
         online={online}
-        label={`${partial ? "~" : ""}${formatPercent(remainingPercent)}%`}
+        label={`${formatPercent(remainingPercent)}% / ${formatCompactBytes(limit)}`}
       />
     </span>
   );
@@ -509,11 +509,11 @@ function NodeDetails({
       )}
       <DetailLine label={labels.quota}>
         {trafficLimit > 0 && trafficUsedBytes !== undefined
-          ? `${trafficIsPartial ? "~" : ""}${labels.used} ${formatCompactBytes(trafficUsedBytes)} / ${formatCompactBytes(trafficLimit)} · ${labels.remaining} ${formatPercent(trafficRemainingPercent)}%${trafficIsPartial ? ` · ${labels.partialCycle}${monthly?.historySince ? `，${labels.recordedSince} ${monthly.historySince}` : ""}` : trafficBaselineNote}`
+          ? `${labels.used} ${formatCompactBytes(trafficUsedBytes)} / ${formatCompactBytes(trafficLimit)} · ${labels.remaining} ${formatPercent(trafficRemainingPercent)}%${trafficIsPartial ? ` · ${labels.partialCycle}${monthly?.historySince ? `，${labels.recordedSince} ${monthly.historySince}` : ""}` : trafficBaselineNote}`
           : trafficLimit > 0
             ? (monthlyLoading ? "…" : `${labels.monthlyUnavailable}${monthlyError ? `: ${monthlyError}` : ""}`)
           : monthly?.hasData
-            ? `${labels.unlimited} · ${monthly.complete ? "" : "~"}${labels.used} ${formatCompactBytes(trafficValue("sum", monthly.up, monthly.down))} · ${labels.nextReset} ${formatDateOnly(monthly.nextReset)}`
+            ? `${labels.unlimited} · ${labels.used} ${formatCompactBytes(trafficValue("sum", monthly.up, monthly.down))} · ${labels.nextReset} ${formatDateOnly(monthly.nextReset)}`
             : labels.unlimited}
       </DetailLine>
       <DetailLine label={labels.load}>
@@ -557,7 +557,7 @@ function GroupTable({
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
   const labels = chinese ? TEXT.zh : TEXT.en;
   const onlineSet = useMemo(() => new Set(liveData.online), [liveData.online]);
-  const columns = 16;
+  const columns = 15;
 
   const toggle = (uuid: string) => {
     setExpanded((current) => {
@@ -583,7 +583,6 @@ function GroupTable({
               <th className="ss-col-location">{labels.location}</th>
               <th className="ss-col-route">{labels.routes}</th>
               <th className="ss-col-uptime">{labels.uptime}</th>
-              <th className="ss-col-load">{labels.load}</th>
               <th className="ss-col-network">{labels.speed}</th>
               <th className="ss-col-cap">{labels.bandwidth}</th>
               <th className="ss-col-cycle">{labels.cycle}</th>
@@ -662,7 +661,6 @@ function FragmentRow({
   monthlyLoading: boolean;
   monthlyError: string | null;
 }) {
-  const load = record?.load.load1 ?? 0;
   const osInfo = useMemo(() => getOSInfo(node.os), [node.os]);
   const labels = chinese ? TEXT.zh : TEXT.en;
   const metadata = parseNodeMetadata(node.tags);
@@ -719,9 +717,6 @@ function FragmentRow({
         </td>
         <td className="ss-col-uptime">
           {online ? formatUptime(record?.uptime ?? 0, chinese) : "-"}
-        </td>
-        <td className="ss-col-load ss-load-value" data-mobile-label={labels.load}>
-          {online ? load.toFixed(2) : "-"}
         </td>
         <td className="ss-col-network" data-mobile-label={labels.speed}>
           {online

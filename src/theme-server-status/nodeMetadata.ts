@@ -19,6 +19,8 @@ export type NodeMetadata = {
   trafficResetDay?: number;
   trafficResetSource?: "confirmed" | "inferred";
   trafficHistorySince?: string;
+  trafficBaselineGiB?: number;
+  trafficBaselineUntil?: string;
   chinaRoutes?: ChinaRouteMetadata;
 };
 
@@ -79,6 +81,17 @@ export function parseNodeMetadata(tags: string | undefined): NodeMetadata {
     ) {
       result.trafficHistorySince = value;
     }
+    if (key === "traffic-baseline-gib") {
+      const parsed = positiveNumber(value);
+      if (parsed !== undefined) result.trafficBaselineGiB = parsed;
+    }
+    if (
+      key === "traffic-baseline-until" &&
+      /^\d{4}-\d{2}-\d{2}$/.test(value) &&
+      !Number.isNaN(new Date(`${value}T00:00:00`).getTime())
+    ) {
+      result.trafficBaselineUntil = value;
+    }
 
     const routeMatch = key.match(ROUTE_TAG_PATTERN);
     if (
@@ -120,6 +133,16 @@ export function parseNodeMetadata(tags: string | undefined): NodeMetadata {
   if (hasChinaRoutes) result.chinaRoutes = chinaRoutes;
 
   return result;
+}
+
+export function activeTrafficBaselineBytes(
+  metadata: NodeMetadata,
+  now: number = Date.now(),
+): number {
+  if (!metadata.trafficBaselineGiB || !metadata.trafficBaselineUntil) return 0;
+  const expires = new Date(`${metadata.trafficBaselineUntil}T00:00:00`).getTime();
+  if (!Number.isFinite(expires) || now >= expires) return 0;
+  return metadata.trafficBaselineGiB * 1024 ** 3;
 }
 
 export function formatRouteValue(

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  activeTrafficBaselineBytes,
   formatMbps,
   formatRouteValue,
   formatDateOnly,
@@ -12,7 +13,7 @@ import {
 
 test("parses structured node metadata without depending on tag order", () => {
   assert.deepEqual(
-    parseNodeMetadata("vpn; lifecycle=keep ; relay=sing-box; bw-up=100 ;role=dmca-resistant; bw-down=100;traffic-reset-day=12;traffic-reset-source=inferred;traffic-history-since=2026-09-13"),
+    parseNodeMetadata("vpn; lifecycle=keep ; relay=sing-box; bw-up=100 ;role=dmca-resistant; bw-down=100;traffic-reset-day=12;traffic-reset-source=inferred;traffic-history-since=2026-09-13;traffic-baseline-gib=214.06;traffic-baseline-until=2026-09-29"),
     {
       bandwidthDownMbps: 100,
       bandwidthUpMbps: 100,
@@ -22,6 +23,8 @@ test("parses structured node metadata without depending on tag order", () => {
       trafficResetDay: 12,
       trafficResetSource: "inferred",
       trafficHistorySince: "2026-09-13",
+      trafficBaselineGiB: 214.06,
+      trafficBaselineUntil: "2026-09-29",
     },
   );
 });
@@ -65,6 +68,33 @@ test("rejects impossible reset days", () => {
 test("rejects malformed traffic history dates", () => {
   assert.deepEqual(parseNodeMetadata("traffic-history-since=2026/09/13"), {});
   assert.deepEqual(parseNodeMetadata("traffic-history-since=not-a-date"), {});
+});
+
+test("applies a provider traffic baseline only until its billing reset", () => {
+  const metadata = parseNodeMetadata(
+    "traffic-baseline-gib=2;traffic-baseline-until=2026-09-29",
+  );
+  assert.equal(
+    activeTrafficBaselineBytes(
+      metadata,
+      new Date("2026-09-28T12:00:00").getTime(),
+    ),
+    2 * 1024 ** 3,
+  );
+  assert.equal(
+    activeTrafficBaselineBytes(
+      metadata,
+      new Date("2026-09-29T00:00:00").getTime(),
+    ),
+    0,
+  );
+  assert.equal(
+    activeTrafficBaselineBytes(
+      parseNodeMetadata("traffic-baseline-gib=2"),
+      new Date("2026-09-28T12:00:00").getTime(),
+    ),
+    0,
+  );
 });
 
 test("formats expiry dates and remaining days deterministically", () => {

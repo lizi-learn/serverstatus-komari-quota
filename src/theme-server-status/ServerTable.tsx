@@ -13,6 +13,7 @@ import {
   progressTone,
 } from "./format";
 import {
+  activeTrafficBaselineBytes,
   daysUntil,
   formatDateOnly,
   formatMbps,
@@ -184,9 +185,12 @@ function trafficUsed(
   monthly?: MonthlyTrafficUsage,
 ): number | undefined {
   const metadata = parseNodeMetadata(node.tags);
+  const baseline = activeTrafficBaselineBytes(metadata);
   if (metadata.trafficResetDay) {
-    if (!monthly?.hasData) return undefined;
-    return trafficValue(node.traffic_limit_type, monthly.up, monthly.down);
+    if (!monthly?.hasData && baseline <= 0) return undefined;
+    return baseline + (monthly?.hasData
+      ? trafficValue(node.traffic_limit_type, monthly.up, monthly.down)
+      : 0);
   }
   return trafficValue(
     node.traffic_limit_type,
@@ -213,6 +217,8 @@ function TrafficQuota({
   monthlyError: string | null;
 }) {
   const labels = chinese ? TEXT.zh : TEXT.en;
+  const metadata = parseNodeMetadata(node.tags);
+  const baseline = activeTrafficBaselineBytes(metadata);
   const limit = Number(node.traffic_limit) || 0;
   if (limit <= 0) {
     const partial = monthly && !monthly.complete;
@@ -247,13 +253,18 @@ function TrafficQuota({
   }
   const usedPercent = percent(used, limit);
   const remainingPercent = Math.max(0, 100 - usedPercent);
-  const partial = monthly && !monthly.complete;
+  const partial = monthly && !monthly.complete && baseline <= 0;
+  const baselineNote = baseline > 0
+    ? (chinese
+        ? ` · 含接入前基线 ${formatCompactBytes(baseline)}`
+        : ` · includes ${formatCompactBytes(baseline)} pre-monitoring baseline`)
+    : "";
   const detailBase = chinese
     ? `已用 ${formatCompactBytes(used)} / ${formatCompactBytes(limit)} · 剩余 ${formatPercent(remainingPercent)}%`
     : `Used ${formatCompactBytes(used)} / ${formatCompactBytes(limit)} · ${formatPercent(remainingPercent)}% remaining`;
   const detail = partial
     ? `${detailBase} · ${labels.partialCycle}${monthly.historySince ? `，${labels.recordedSince} ${monthly.historySince}` : ""}`
-    : detailBase;
+    : `${detailBase}${baselineNote}`;
 
   return (
     <span className="ss-quota-progress" title={detail} aria-label={detail}>
@@ -424,6 +435,15 @@ function NodeDetails({
   const trafficPercent = percent(trafficUsedBytes ?? 0, trafficLimit);
   const trafficRemainingPercent = Math.max(0, 100 - trafficPercent);
   const metadata = parseNodeMetadata(node.tags);
+  const trafficBaseline = activeTrafficBaselineBytes(metadata);
+  const trafficIsPartial = Boolean(
+    monthly && !monthly.complete && trafficBaseline <= 0,
+  );
+  const trafficBaselineNote = trafficBaseline > 0
+    ? (chinese
+        ? ` · 含接入前基线 ${formatCompactBytes(trafficBaseline)}`
+        : ` · includes ${formatCompactBytes(trafficBaseline)} pre-monitoring baseline`)
+    : "";
 
   return (
     <div className="ss-node-details">
@@ -489,7 +509,7 @@ function NodeDetails({
       )}
       <DetailLine label={labels.quota}>
         {trafficLimit > 0 && trafficUsedBytes !== undefined
-          ? `${monthly && !monthly.complete ? "~" : ""}${labels.used} ${formatCompactBytes(trafficUsedBytes)} / ${formatCompactBytes(trafficLimit)} · ${labels.remaining} ${formatPercent(trafficRemainingPercent)}%${monthly && !monthly.complete ? ` · ${labels.partialCycle}${monthly.historySince ? `，${labels.recordedSince} ${monthly.historySince}` : ""}` : ""}`
+          ? `${trafficIsPartial ? "~" : ""}${labels.used} ${formatCompactBytes(trafficUsedBytes)} / ${formatCompactBytes(trafficLimit)} · ${labels.remaining} ${formatPercent(trafficRemainingPercent)}%${trafficIsPartial ? ` · ${labels.partialCycle}${monthly?.historySince ? `，${labels.recordedSince} ${monthly.historySince}` : ""}` : trafficBaselineNote}`
           : trafficLimit > 0
             ? (monthlyLoading ? "…" : `${labels.monthlyUnavailable}${monthlyError ? `: ${monthlyError}` : ""}`)
           : monthly?.hasData

@@ -312,6 +312,7 @@
     linear-gradient(90deg, rgba(52, 190, 255, 0.11), rgba(71, 211, 255, 0.025) 60%),
     var(--ss-panel);
   box-shadow: inset 0 1px rgba(72, 201, 255, 0.28), inset 0 -1px rgba(72, 201, 255, 0.2);
+  animation: ssRelayRowBlueSoft 2.4s ease-in-out infinite;
 }
 
 .ss-node-row.is-relay-fast > td {
@@ -329,6 +330,12 @@
 @keyframes ssRelayRowBlue {
   50% {
     box-shadow: inset 0 1px rgba(75, 216, 255, 0.72), inset 0 -1px rgba(75, 216, 255, 0.58), 0 0 15px rgba(31, 177, 255, 0.2);
+  }
+}
+
+@keyframes ssRelayRowBlueSoft {
+  50% {
+    box-shadow: inset 0 1px rgba(75, 216, 255, 0.48), inset 0 -1px rgba(75, 216, 255, 0.38), 0 0 10px rgba(31, 177, 255, 0.12);
   }
 }
 
@@ -2163,6 +2170,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .ss-relay-strip,
+  .ss-node-row.is-relay-active > td,
   .ss-node-row.is-relay-fast > td {
     animation: none !important;
   }

@@ -63,7 +63,7 @@ test("quota bar shows the configured cap without approximation prefixes", () => 
   assert.doesNotMatch(table, /`∞ · \$\{partial \? "~"/);
 });
 
-test("relay rows use only network-driven blue states", () => {
+test("all node rows use only network-driven blue states", () => {
   assert.match(traffic, /RELAY_ACTIVE_RATE = 128 \* 1024/);
   assert.match(traffic, /RELAY_FAST_RATE = 1024 \* 1024/);
   assert.doesNotMatch(traffic, /cpu|ram|memory|resource/i);
@@ -72,6 +72,7 @@ test("relay rows use only network-driven blue states", () => {
   assert.match(css, /\.ss-node-row\.is-relay-active/);
   assert.match(css, /\.ss-node-row\.is-relay-fast/);
   assert.match(css, /@keyframes ssRelayRowBlue/);
+  assert.match(css, /@keyframes ssRelayRowBlueSoft/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
 });
 
@@ -86,6 +87,7 @@ test("strip keeps subscription actions without duplicating node cards", () => {
 
 test("relay membership comes from an explicit safe metadata tag", () => {
   assert.match(strip, /parseNodeMetadata\(node\.tags\)\.relay/);
-  assert.match(table, /metadata\.relay \? relayTrafficState/);
+  assert.match(table, /const trafficState = relayTrafficState\(record, online\)/);
+  assert.doesNotMatch(table, /metadata\.relay \? relayTrafficState/);
   assert.doesNotMatch(strip, /\b(?:\d{1,3}\.){3}\d{1,3}\b/);
 });

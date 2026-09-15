@@ -664,18 +664,18 @@ function FragmentRow({
   const osInfo = useMemo(() => getOSInfo(node.os), [node.os]);
   const labels = chinese ? TEXT.zh : TEXT.en;
   const metadata = parseNodeMetadata(node.tags);
-  const relayState = metadata.relay ? relayTrafficState(record, online) : null;
-  const relayClass = relayState === "fast"
+  const trafficState = relayTrafficState(record, online);
+  const trafficClass = trafficState === "fast"
     ? "is-relay-fast"
-    : relayState === "active"
+    : trafficState === "active"
       ? "is-relay-active"
       : "";
 
   return (
     <>
       <tr
-        className={`ss-node-row ${index % 2 ? "is-even" : "is-odd"} ${relayClass}`.trim()}
-        data-relay-traffic={relayState ?? undefined}
+        className={`ss-node-row ${index % 2 ? "is-even" : "is-odd"} ${trafficClass}`.trim()}
+        data-traffic-state={trafficState}
         aria-expanded={isExpanded}
         tabIndex={0}
         onClick={onToggle}

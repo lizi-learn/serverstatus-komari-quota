@@ -786,9 +786,76 @@
   height: 15px;
 }
 
+.ss-relay-strip__totals {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.ss-relay-total {
+  position: relative;
+  overflow: hidden;
+  min-width: 0;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: transparent;
+  border: 1px solid var(--ss-rule);
+  border-radius: 4px;
+}
+
+.ss-relay-total small,
+.ss-relay-strip__footnote {
+  color: var(--ss-muted);
+  font-size: 9px;
+}
+
+.ss-relay-total b,
+.ss-relay-total em {
+  overflow: hidden;
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ss-relay-total b {
+  font-size: 11px;
+}
+
+.ss-relay-total em {
+  color: var(--ss-muted);
+  font-size: 9px;
+  font-style: normal;
+}
+
+.ss-relay-total.is-active {
+  border-color: rgba(49, 155, 223, 0.55);
+  box-shadow: inset 2px 0 rgba(49, 155, 223, 0.72);
+}
+
+.ss-relay-total.is-fast {
+  border-color: rgba(49, 155, 223, 0.88);
+  animation: ssRelayTotalBlue 1.45s ease-in-out infinite;
+}
+
+.ss-relay-strip__footnote {
+  grid-column: 1 / -1;
+  margin-top: -3px;
+}
+
 @keyframes ssRelayStripBlue {
   50% {
     box-shadow: inset 3px 0 #319bdf, 0 0 16px rgba(49, 155, 223, 0.24);
+  }
+}
+
+@keyframes ssRelayTotalBlue {
+  50% {
+    color: #e7f8ff;
+    background: rgba(49, 155, 223, 0.13);
+    box-shadow: inset 2px 0 #319bdf, 0 0 13px rgba(49, 155, 223, 0.3);
   }
 }
 
@@ -2042,6 +2109,10 @@
 }
 
 @media (max-width: 1100px) {
+  .ss-relay-strip__totals {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .ss-relay-grid.is-list .ss-relay-card.is-compact {
     grid-template-columns: minmax(190px, 1fr) minmax(290px, 1.2fr) auto;
   }
@@ -2085,6 +2156,19 @@
   .ss-relay-strip__actions a {
     min-width: 35px;
     padding: 0 9px;
+  }
+
+  .ss-relay-strip__totals {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 5px;
+  }
+
+  .ss-relay-total {
+    padding: 5px 6px;
+  }
+
+  .ss-relay-total b {
+    font-size: 10px;
   }
 
   .ss-relay-page {

@@ -48,6 +48,16 @@ test("home strip uses live network data and contains no refresh control", () => 
   assert.doesNotMatch(strip, /\bram\b/i);
   assert.doesNotMatch(strip, /refresh/i);
   assert.match(strip, /整机正在传输/);
+  assert.match(strip, /useMonthlyTraffic\(nodes\)/);
+  assert.match(strip, /全部机器/);
+  assert.match(strip, /中转节点/);
+  assert.match(strip, /AVA 抗投诉/);
+  assert.match(strip, /狗云入口/);
+  assert.match(strip, /Breeze 计算/);
+  assert.match(strip, /HostDizire 存储/);
+  assert.match(strip, /本账期/);
+  assert.match(css, /\.ss-relay-total\.is-fast/);
+  assert.match(css, /@keyframes ssRelayTotalBlue/);
 });
 
 test("home table hides load while expanded details retain it", () => {
@@ -80,7 +90,7 @@ test("strip keeps subscription actions without duplicating node cards", () => {
   assert.match(strip, /copySubscription/);
   assert.match(strip, /MANAGER_URL/);
   assert.doesNotMatch(strip, /RelayCard/);
-  assert.doesNotMatch(strip, /useMonthlyTraffic/);
+  assert.match(strip, /useMonthlyTraffic/);
   assert.match(css, /\.ss-relay-strip[\s\S]*?background: transparent/);
   assert.match(css, /\.ss-relay-strip[\s\S]*?min-height: 50px/);
 });

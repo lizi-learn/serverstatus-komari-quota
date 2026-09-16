@@ -12,9 +12,13 @@ import {
   type RelayTrafficState,
 } from "./relayTraffic";
 
-const SUBSCRIPTION_URL =
+const V2RAYN_SUBSCRIPTION_URL =
   "https://small.bismih520.com/v2rayn-23c0560dbaebf6e13340f95c821ba83942b16c0cd42dd4a2";
+const CLASH_SUBSCRIPTION_URL =
+  "https://small.bismih520.com/clash-43feea44e0ab7c29204d9231d4570c6ca85696a5fd00faa3";
 const MANAGER_URL = "https://sub.bismih520.com/";
+
+type SubscriptionKind = "clash" | "v2rayn";
 
 type RelayStripProps = {
   nodes: NodeBasicInfo[];
@@ -50,7 +54,7 @@ function summaryState(summary: TrafficSummary): RelayTrafficState {
 }
 
 export default function RelayStrip({ nodes, liveData, chinese }: RelayStripProps) {
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<SubscriptionKind | null>(null);
   const monthlyTraffic = useMonthlyTraffic(nodes);
   const relayNodes = useMemo(
     () => nodes.filter((node) => parseNodeMetadata(node.tags).relay),
@@ -144,13 +148,13 @@ export default function RelayStrip({ nodes, liveData, chinese }: RelayStripProps
 
   if (!relayNodes.length) return null;
 
-  const copySubscription = async () => {
+  const copySubscription = async (kind: SubscriptionKind, url: string) => {
     try {
-      await navigator.clipboard.writeText(SUBSCRIPTION_URL);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1600);
+      await navigator.clipboard.writeText(url);
+      setCopied(kind);
+      window.setTimeout(() => setCopied(null), 1600);
     } catch {
-      setCopied(false);
+      setCopied(null);
     }
   };
 
@@ -192,11 +196,23 @@ export default function RelayStrip({ nodes, liveData, chinese }: RelayStripProps
       </div>
 
       <div className="ss-relay-strip__actions">
-        <button type="button" onClick={() => void copySubscription()}>
-          {copied ? <Check /> : <Copy />}
-          {copied
+        <button
+          type="button"
+          onClick={() => void copySubscription("clash", CLASH_SUBSCRIPTION_URL)}
+        >
+          {copied === "clash" ? <Check /> : <Copy />}
+          {copied === "clash"
             ? chinese ? "已复制" : "Copied"
-            : chinese ? "复制 v2rayN 订阅" : "Copy for v2rayN"}
+            : chinese ? "Clash 订阅" : "Clash"}
+        </button>
+        <button
+          type="button"
+          onClick={() => void copySubscription("v2rayn", V2RAYN_SUBSCRIPTION_URL)}
+        >
+          {copied === "v2rayn" ? <Check /> : <Copy />}
+          {copied === "v2rayn"
+            ? chinese ? "已复制" : "Copied"
+            : chinese ? "v2rayN 订阅" : "v2rayN"}
         </button>
         <a href={MANAGER_URL} target="_blank" rel="noreferrer">
           <ShieldCheck /> {chinese ? "管理" : "Manage"}

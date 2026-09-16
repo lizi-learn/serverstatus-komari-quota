@@ -89,6 +89,8 @@ test("all node rows use only network-driven blue states", () => {
 test("strip keeps subscription actions without duplicating node cards", () => {
   assert.match(strip, /copySubscription/);
   assert.match(strip, /MANAGER_URL/);
+  assert.match(strip, /small\.bismih520\.com\/v2rayn-/);
+  assert.match(strip, /v2rayN 订阅/);
   assert.doesNotMatch(strip, /RelayCard/);
   assert.match(strip, /useMonthlyTraffic/);
   assert.match(css, /\.ss-relay-strip[\s\S]*?background: transparent/);

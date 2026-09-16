@@ -12,7 +12,8 @@ import {
   type RelayTrafficState,
 } from "./relayTraffic";
 
-const SUBSCRIPTION_URL = "https://sub.bismih520.com/ynfjsjY9Y";
+const SUBSCRIPTION_URL =
+  "https://small.bismih520.com/v2rayn-23c0560dbaebf6e13340f95c821ba83942b16c0cd42dd4a2";
 const MANAGER_URL = "https://sub.bismih520.com/";
 
 type RelayStripProps = {
@@ -157,12 +158,12 @@ export default function RelayStrip({ nodes, liveData, chinese }: RelayStripProps
     <section
       id="relays"
       className={`ss-relay-strip is-${stats.fastestState}`}
-      aria-label={chinese ? "中转订阅与实时状态" : "Relay subscription and live status"}
+      aria-label={chinese ? "v2rayN 订阅与实时状态" : "v2rayN subscription and live status"}
     >
       <div className="ss-relay-strip__identity">
         <span className="ss-relay-strip__icon" aria-hidden="true"><RadioTower /></span>
         <span>
-          <strong>{chinese ? "中转订阅" : "Relay subscription"}</strong>
+          <strong>{chinese ? "v2rayN 订阅" : "v2rayN subscription"}</strong>
           <small>
             {chinese
               ? "状态自动更新；蓝色表示整机正在传输"
@@ -195,7 +196,7 @@ export default function RelayStrip({ nodes, liveData, chinese }: RelayStripProps
           {copied ? <Check /> : <Copy />}
           {copied
             ? chinese ? "已复制" : "Copied"
-            : chinese ? "复制订阅" : "Copy"}
+            : chinese ? "复制 v2rayN 订阅" : "Copy for v2rayN"}
         </button>
         <a href={MANAGER_URL} target="_blank" rel="noreferrer">
           <ShieldCheck /> {chinese ? "管理" : "Manage"}

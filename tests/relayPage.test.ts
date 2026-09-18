@@ -86,15 +86,14 @@ test("all node rows use only network-driven blue states", () => {
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
 });
 
-test("strip keeps subscription actions without duplicating node cards", () => {
-  assert.match(strip, /copySubscription/);
-  assert.match(strip, /MANAGER_URL/);
-  assert.match(strip, /V2RAYN_SUBSCRIPTION_URL/);
-  assert.match(strip, /CLASH_SUBSCRIPTION_URL/);
-  assert.match(strip, /small\.bismih520\.com\/v2rayn-/);
-  assert.match(strip, /small\.bismih520\.com\/clash-/);
-  assert.match(strip, /Clash 订阅/);
-  assert.match(strip, /v2rayN 订阅/);
+test("strip keeps traffic summaries without exposing subscription controls", () => {
+  assert.doesNotMatch(strip, /copySubscription/);
+  assert.doesNotMatch(strip, /SUBSCRIPTION_URL/);
+  assert.doesNotMatch(strip, /sub\.bismih520\.com/);
+  assert.doesNotMatch(strip, /small\.bismih520\.com\/(?:v2rayn|clash)-/);
+  assert.doesNotMatch(strip, /Clash 订阅/);
+  assert.doesNotMatch(strip, /v2rayN 订阅/);
+  assert.match(strip, /流量概览/);
   assert.doesNotMatch(strip, /RelayCard/);
   assert.match(strip, /useMonthlyTraffic/);
   assert.match(css, /\.ss-relay-strip[\s\S]*?background: transparent/);

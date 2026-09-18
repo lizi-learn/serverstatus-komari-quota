@@ -1,5 +1,5 @@
-import { useCallback, useMemo, useState } from "react";
-import { Check, Copy, RadioTower, ShieldCheck } from "lucide-react";
+import { useCallback, useMemo } from "react";
+import { RadioTower } from "lucide-react";
 import type { NodeBasicInfo } from "@/contexts/NodeListContext";
 import type { LiveData } from "@/types/LiveData";
 import { formatCompactBytes } from "./format";
@@ -11,14 +11,6 @@ import {
   relayTrafficState,
   type RelayTrafficState,
 } from "./relayTraffic";
-
-const V2RAYN_SUBSCRIPTION_URL =
-  "https://small.bismih520.com/v2rayn-23c0560dbaebf6e13340f95c821ba83942b16c0cd42dd4a2";
-const CLASH_SUBSCRIPTION_URL =
-  "https://small.bismih520.com/clash-43feea44e0ab7c29204d9231d4570c6ca85696a5fd00faa3";
-const MANAGER_URL = "https://sub.bismih520.com/";
-
-type SubscriptionKind = "clash" | "v2rayn";
 
 type RelayStripProps = {
   nodes: NodeBasicInfo[];
@@ -54,7 +46,6 @@ function summaryState(summary: TrafficSummary): RelayTrafficState {
 }
 
 export default function RelayStrip({ nodes, liveData, chinese }: RelayStripProps) {
-  const [copied, setCopied] = useState<SubscriptionKind | null>(null);
   const monthlyTraffic = useMonthlyTraffic(nodes);
   const relayNodes = useMemo(
     () => nodes.filter((node) => parseNodeMetadata(node.tags).relay),
@@ -148,26 +139,16 @@ export default function RelayStrip({ nodes, liveData, chinese }: RelayStripProps
 
   if (!relayNodes.length) return null;
 
-  const copySubscription = async (kind: SubscriptionKind, url: string) => {
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopied(kind);
-      window.setTimeout(() => setCopied(null), 1600);
-    } catch {
-      setCopied(null);
-    }
-  };
-
   return (
     <section
       id="relays"
       className={`ss-relay-strip is-${stats.fastestState}`}
-      aria-label={chinese ? "v2rayN 订阅与实时状态" : "v2rayN subscription and live status"}
+      aria-label={chinese ? "服务器流量概览" : "Server traffic overview"}
     >
       <div className="ss-relay-strip__identity">
         <span className="ss-relay-strip__icon" aria-hidden="true"><RadioTower /></span>
         <span>
-          <strong>{chinese ? "v2rayN 订阅" : "v2rayN subscription"}</strong>
+          <strong>{chinese ? "流量概览" : "Traffic overview"}</strong>
           <small>
             {chinese
               ? "状态自动更新；蓝色表示整机正在传输"
@@ -193,30 +174,6 @@ export default function RelayStrip({ nodes, liveData, chinese }: RelayStripProps
           <small>{chinese ? "实时上传" : "Live up"}</small>
           <b>↑ {speed(stats.totalUpRate)}</b>
         </span>
-      </div>
-
-      <div className="ss-relay-strip__actions">
-        <button
-          type="button"
-          onClick={() => void copySubscription("clash", CLASH_SUBSCRIPTION_URL)}
-        >
-          {copied === "clash" ? <Check /> : <Copy />}
-          {copied === "clash"
-            ? chinese ? "已复制" : "Copied"
-            : chinese ? "Clash 订阅" : "Clash"}
-        </button>
-        <button
-          type="button"
-          onClick={() => void copySubscription("v2rayn", V2RAYN_SUBSCRIPTION_URL)}
-        >
-          {copied === "v2rayn" ? <Check /> : <Copy />}
-          {copied === "v2rayn"
-            ? chinese ? "已复制" : "Copied"
-            : chinese ? "v2rayN 订阅" : "v2rayN"}
-        </button>
-        <a href={MANAGER_URL} target="_blank" rel="noreferrer">
-          <ShieldCheck /> {chinese ? "管理" : "Manage"}
-        </a>
       </div>
 
       <div className="ss-relay-strip__totals" aria-label={chinese ? "资源池流量汇总" : "Fleet traffic totals"}>

@@ -24,11 +24,11 @@ const css = fs.readFileSync(
 const nav = fs.readFileSync(path.join(root, "src/components/NavBar.tsx"), "utf8");
 const routes = fs.readFileSync(path.join(root, "src/routes.ts"), "utf8");
 
-test("relay controls are merged into home and the old page redirects", () => {
+test("traffic overview is absent from home and old pages redirect", () => {
   assert.doesNotMatch(nav, /to: "\/relays"/);
   assert.doesNotMatch(nav, /to: "\/network"/);
-  assert.match(index, /<RelayStrip/);
-  assert.ok(index.indexOf("<ServerTable") < index.indexOf("<RelayStrip"));
+  assert.doesNotMatch(index, /RelayStrip/);
+  assert.match(index, /<ServerTable/);
   assert.match(routes, /path: "relays"/);
   assert.match(routes, /Navigate, \{ to: "\/#relays", replace: true \}/);
   assert.match(routes, /path: "network"[\s\S]*?Navigate, \{ to: "\/", replace: true \}/);
